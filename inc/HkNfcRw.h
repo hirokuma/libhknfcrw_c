@@ -10,15 +10,14 @@
 
 
 /**
- * @enum	HkNfcRwType
+ * @typedef	HkNfcType
  * @brief	Polling時のNFCカードタイプ
  */
-typedef enum HkNfcRwType {
-	NFC_NONE,		///< 未設定
-	NFC_A,			///< NFC-A
-	NFC_B,			///< NFC-B
-    NFC_F			///< NFC-F
-} HkNfcRwType;
+typedef uint8_t HkNfcType;
+#define HKNFCTYPE_NONE	((HkNfcType)0)		///< 未設定
+#define HKNFCTYPE_A		((HkNfcType)1)		///< NFC-A
+#define HKNFCTYPE_B		((HkNfcType)2)		///< NFC-B
+#define HKNFCTYPE_F		((HkNfcType)3)		///< NFC-F
 
 
 
@@ -37,13 +36,13 @@ bool HkNfcRw_Open(void);
 void HkNfcRw_Close(void);
 
 /// ターゲットの探索
-HkNfcRwType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF);
+HkNfcType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF);
 
 /// NFCID取得
 uint8_t HkNfcRw_GetNfcId(uint8_t* pBuf);
 
 /// @brief NFCタイプの取得
-HkNfcRwType HkNfcRw_GetType(void);
+HkNfcType HkNfcRw_GetType(void);
 
 
 #endif // HKNFCRW_H

@@ -21,10 +21,10 @@ int nfc_test()
 	}
 	printf("Card Detect & read\n");
 
-	HkNfcRwType type = HkNfcRw_Detect(true, true, true);
+	HkNfcType type = HkNfcRw_Detect(true, true, true);
 	printf("type = %d\n", (int)type);
 
-	if(type != NFC_F) {
+	if(type != HKNFCTYPE_F) {
 		printf("detect fail\n");
 		HkNfcRw_Close();
 		return -1;

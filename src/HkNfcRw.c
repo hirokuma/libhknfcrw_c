@@ -13,7 +13,7 @@
 #define LOG_TAG "HkNfcRw"
 #include "nfclog.h"
 
-static HkNfcRwType	m_Type = NFC_NONE;	///< アクティブなNFCタイプ
+static HkNfcType	m_Type = HKNFCTYPE_NONE;	///< アクティブなNFCタイプ
 
 
 
@@ -72,7 +72,7 @@ void HkNfcRw_Close(void)
 void HkNfcRw_Release(void)
 {
 	NfcPcd_ClrNfcId();
-	m_Type = NFC_NONE;
+	m_Type = HKNFCTYPE_NONE;
 }
 
 
@@ -89,15 +89,15 @@ void HkNfcRw_Release(void)
  * @note		- #HkNfcRw_Open()後に呼び出すこと。
  * 				- アクティブなカードが変更された場合に呼び出すこと。
  */
-HkNfcRwType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF)
+HkNfcType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF)
 {
-	m_Type = NFC_NONE;
+	m_Type = HKNFCTYPE_NONE;
 
 	if(bNfcF) {
         bool ret = HkNfcF_Polling(0xffff);
 		if(ret) {
 			LOGD("PollingF\n");
-			m_Type = NFC_F;
+			m_Type = HKNFCTYPE_F;
 			return m_Type;
 		}
 	}
@@ -106,7 +106,7 @@ HkNfcRwType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF)
         bool ret = HkNfcA_Polling();
 		if(ret) {
 			LOGD("PollingA\n");
-			m_Type = NFC_A;
+			m_Type = HKNFCTYPE_A;
 			return m_Type;
 		}
 	}
@@ -115,13 +115,13 @@ HkNfcRwType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF)
         bool ret = HkNfcB_Polling();
 		if(ret) {
 			LOGD("PollingB\n");
-			m_Type = NFC_B;
+			m_Type = HKNFCTYPE_B;
 			return m_Type;
 		}
 	}
 	LOGD("Detect fail\n");
 
-	return NFC_NONE;
+	return HKNFCTYPE_NONE;
 }
 
 
@@ -147,9 +147,9 @@ uint8_t HkNfcRw_GetNfcId(uint8_t* pBuf)
  *
  * NFCタイプを取得する
  *
- * @return		HkNfcRwType 参照
+ * @return		HkNfcType 参照
  */
-HkNfcRwType HkNfcRw_GetType(void)
+HkNfcType HkNfcRw_GetType(void)
 {
 	return m_Type;
 }

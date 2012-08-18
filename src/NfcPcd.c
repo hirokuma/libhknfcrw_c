@@ -1181,6 +1181,7 @@ static bool _sendCmd(
 
 	//ACK受信
 	uint8_t res_buf[6];
+	hk_nfcrw_read_timeout(5);		/* 5msタイムアウト */
 	uint16_t ret_len = hk_nfcrw_read(res_buf, 6);
 	if((ret_len != 6) || (hk_memcmp(res_buf, ACK, sizeof(ACK)) != 0)) {
 		LOGE("_sendCmd 0: ret=%d\n", ret_len);
@@ -1194,6 +1195,7 @@ static bool _sendCmd(
 		_sendAck();
 		return false;
 	}
+	hk_nfcrw_read_timeout(0);		/* タイムアウト終了 */
 
 	// レスポンス
 	return (bRecv) ? _recvResp(pResponse, pResponseLen, pCommand[1]) : true;

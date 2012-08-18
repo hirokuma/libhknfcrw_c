@@ -1,7 +1,7 @@
 #ifndef NFCLOG_H
 #define NFCLOG_H
 
-#define HKNFCRW_ENABLE_DEBUG
+//#define HKNFCRW_ENABLE_DEBUG
 
 #ifdef HKNFCRW_ENABLE_DEBUG
 #include <stdio.h>
