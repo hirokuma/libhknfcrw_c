@@ -35,6 +35,9 @@ bool HkNfcRw_Open(void);
 /// クローズ
 void HkNfcRw_Close(void);
 
+/// 搬送波停止
+void HkNfcRw_RfOff(void);
+
 /// ターゲットの探索
 HkNfcType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF);
 

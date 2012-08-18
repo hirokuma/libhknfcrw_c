@@ -77,6 +77,15 @@ void HkNfcRw_Release(void)
 
 
 /**
+ * 搬送波停止。
+ */
+void HkNfcRw_RfOff(void)
+{
+	NfcPcd_RfOff();
+}
+
+
+/**
  * ターゲットの探索
  *
  * @param[in]	bNfcA	NfcA(null時は探索しない)
