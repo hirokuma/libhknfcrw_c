@@ -8,6 +8,7 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#include "HkNfcId.h"
 
 /**
  * @class		NfcPcd
@@ -18,11 +19,6 @@
  */
 
 #define DATA_MAX		((uint16_t)265)		///< データ部最大長
-
-#define NFCID0_LEN		(4)		///< NFCID0サイズ(NFC-B)
-#define NFCID2_LEN		(8)		///< NFCID2サイズ(NFC-F)
-#define NFCID3_LEN		(10)	///< NFCID3サイズ(DEP)
-#define MAX_NFCID_LEN	(12)	/// 最大UID長
 
 /// GetFirmware
 #define GF_IC		(0)			///< GetFirmware:IC

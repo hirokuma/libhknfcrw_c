@@ -7,7 +7,7 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-
+#include "HkNfcId.h"
 
 /**
  * @typedef	HkNfcType

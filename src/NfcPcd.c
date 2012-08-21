@@ -1181,7 +1181,18 @@ static bool _sendCmd(
 
 	//ACK受信
 	uint8_t res_buf[6];
-	hk_nfcrw_read_timeout(5);		/* 5msタイムアウト */
+	hk_nfcrw_read_timeout(30);		/* 30msタイムアウト(115200bps時) */
+									/*
+									 * 送信がバッファにためるだけのことがあるので、
+									 * コマンドの最大長(265byte)を送信し、
+									 * ACK応答までの最大時間(3.5ms)を加え、
+									 * ACK(5byte)を返信する時間まで考慮した。
+									 * 
+									 * 送信   :23.0ms
+									 * ACK応答: 3.5ms
+									 * ACK返信: 0.5ms
+									 * あわせると27ms強なので、30msにしておく。
+									 */
 	uint16_t ret_len = hk_nfcrw_read(res_buf, 6);
 	if((ret_len != 6) || (hk_memcmp(res_buf, ACK, sizeof(ACK)) != 0)) {
 		LOGE("_sendCmd 0: ret=%d\n", ret_len);

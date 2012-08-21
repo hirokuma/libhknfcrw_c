@@ -46,6 +46,14 @@ typedef uint8_t HkNfcASelRes;
 /// @brief	不明
 #define HKNFCA_SELRES_UNKNOWN			((HkNfcASelRes)0xff)
 
+/// @def	HKNFCA_SELRES_TPE
+/// @brief	SEL_RESのTPEビット
+#define HKNFCA_SELRES_TPE				((HkNfcASelRes)0x40)
+
+/// @def	HKNFCA_IS_SELRES_TPE
+/// @brief	SEL_RESからTPE端末かどうか判別する
+#define HKNFCA_IS_SELRES_TPE(selres)	((sel_res & HKNFCA_SELRES_TPE) == HKNFCA_SELRES_TPE)
+
 #if 0
 enum Error {
 	SUCCESS				= 0x00,

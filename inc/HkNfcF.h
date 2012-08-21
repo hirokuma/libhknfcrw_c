@@ -14,6 +14,11 @@
 #define HKNFCF_SC_NDEF		((uint16_t)0x12fc)		///< NDEFシステムコード
 
 
+/// @def	HKNFCF_IS_NFCID_TPE()
+/// @brief	NFCIDからTPE端末かどうか判別する
+#define HKNFCF_IS_NFCID_TPE(nfcid)	((nfcid[0] == 0x01) && (nfcid[1] == 0xfe))
+
+
 bool HkNfcF_Polling(uint16_t systemCode);
 void HkNfcF_Release(void);
 bool HkNfcF_Read(uint8_t* buf, uint8_t BlockNo);
