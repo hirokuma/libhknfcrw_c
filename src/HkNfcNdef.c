@@ -23,13 +23,14 @@
  * @param[in]	LangCode	言語コード
  * @return		作成成功/失敗
  */
-bool HkNfcNdef_CreateText(HkNfcNdefMsg* pMsg, const void* pUTF8, uint16_t len, uint16_t LangCode)
+bool HkNfcNdef_CreateText(HkNfcNdefMsg* pMsg, const void* pUTF8, uint16_t len, HkNfcNdefLangCode LangCode)
 {
 	uint16_t pos = 0;
 	
 	pMsg->Data[pos++] = (uint8_t)(MB | ME | SR | TNF_WK);
 	pMsg->Data[pos++] = 1;		//Type Length
-	pMsg->Data[pos++] = (uint8_t)len;		//Payload Length
+	pMsg->Data[pos++] = (uint8_t)(3 + len);		//Payload Length
+												//国コードが2byteなので、3
 	//ID Lengthは、なし
 	pMsg->Data[pos++] = 'T';		//Type=TEXT
 	//IDも、なし

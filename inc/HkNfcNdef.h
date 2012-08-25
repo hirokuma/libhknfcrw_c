@@ -8,7 +8,9 @@
 #include <stdbool.h>
 #include "HkNfcNdefMsg.h"
 
-#define HKNFCNDEF_LC(c1,c2) ((uint16_t)(((c1)<<8) | c2))
+typedef uint16_t HkNfcNdefLangCode;
+
+#define HKNFCNDEF_LC(c1,c2) ((HkNfcNdefLangCode)(((c1)<<8) | c2))
 
 /**
  * @enum	HkNfcNdefRecordType
@@ -40,6 +42,6 @@ typedef enum HkNfcNdefRecordType {
 #define LANGCODE_JP		HKNFCNDEF_LC('j', 'a')
 
 bool HkNfcNdef_CreateText(HkNfcNdefMsg* pMsg,
-			const void* pUTF8, uint16_t len, uint16_t LangCode);
+			const void* pUTF8, uint16_t len, HkNfcNdefLangCode LangCode);
 
 #endif /* HK_NFCNDEF_H */
