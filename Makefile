@@ -5,7 +5,7 @@ AR       = arm-none-eabi-ar
 
 
 USE_SNEP_TARGET = yes
-#USE_SNEP_INITIATOR  = yes
+USE_SNEP_INITIATOR  = yes
 
 TARGET = libhknfcrw.a
 

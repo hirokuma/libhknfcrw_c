@@ -4,6 +4,7 @@
  */
 #include "HkNfcSnep.h"
 #include "HkNfcLlcp.h"
+#include "HkNfcRw.h"
 
 
 #define SNEP_SUCCESS		((uint8_t)0x81)
@@ -77,6 +78,11 @@ bool HkNfcSnep_PutStart(HkNfcSnepMode Mode, const HkNfcNdefMsg* pMsg)
 	if(Mode == HKNFCSNEP_MD_INITIATOR) {
 		// Initiatorとして動作
 #ifdef USE_SNEP_INITIATOR
+		HkNfcType type = HkNfcRw_GetType();
+		if((type != HKNFCTYPE_A) && (type != HKNFCTYPE_F)) {
+			/* ポーリングの結果がNFC-AかNFC-Fだけ */
+			return false;
+		}
 		m_PollFunc = pollI;
 #else
 		return false;
@@ -111,10 +117,25 @@ bool HkNfcSnep_Poll(void)
 static bool pollI(void)
 {
 	bool b = false;
+	HkNfcType type;
+	HkNfcDepMode mode;
 
 	switch(m_Status) {
 	case ST_START_PUT:
-		b = HkNfcLlcpI_Start(HKNFCDEPMODE_PSV_424K, recvCbI);
+		type = HkNfcRw_GetType();
+		switch(type) {
+		case HKNFCTYPE_A:
+			mode = HKNFCDEPMODE_ACT_106K;
+			break;
+		case HKNFCTYPE_F:
+			mode = HKNFCDEPMODE_ACT_424K;
+			break;
+		default:
+			/* こうはならないはず */
+			m_Status = ST_ABORT;
+			return false;
+		} 
+		b = HkNfcLlcpI_Start(mode, recvCbI);
 		if(b) {
 			uint8_t snep_head[6];
 			snep_head[0] = 0x10;
