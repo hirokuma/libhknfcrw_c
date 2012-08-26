@@ -66,6 +66,8 @@ uint8_t HkNfcSnep_GetResult(void)
  * @param[in]	Mode	モード
  * @param[in]	pMsg	NDEFメッセージ(送信が終わるまで保持する)
  * @return		開始成功/失敗
+ * @note		- #HKNFCSNEP_MD_INITIATORの場合、最後にPollingしたTechnologyでDEPする.
+ * @attention	- Initiatorの場合、TargetをPollingしておくこと.
  */
 bool HkNfcSnep_PutStart(HkNfcSnepMode Mode, const HkNfcNdefMsg* pMsg)
 {
@@ -73,7 +75,6 @@ bool HkNfcSnep_PutStart(HkNfcSnepMode Mode, const HkNfcNdefMsg* pMsg)
 		return false;
 	}
 	m_Status = ST_START_PUT;
-	m_pMessage = pMsg;
 
 	if(Mode == HKNFCSNEP_MD_INITIATOR) {
 		// Initiatorとして動作
@@ -97,6 +98,7 @@ bool HkNfcSnep_PutStart(HkNfcSnepMode Mode, const HkNfcNdefMsg* pMsg)
 #endif	//USE_SNEP_TARGET
 	}
 
+	m_pMessage = pMsg;
 	return true;
 }
 
@@ -116,12 +118,13 @@ bool HkNfcSnep_Poll(void)
 #ifdef USE_SNEP_INITIATOR
 static bool pollI(void)
 {
-	bool b = false;
+	bool b;
 	HkNfcType type;
 	HkNfcDepMode mode;
 
 	switch(m_Status) {
 	case ST_START_PUT:
+		b = true;
 		type = HkNfcRw_GetType();
 		switch(type) {
 		case HKNFCTYPE_A:
@@ -133,9 +136,10 @@ static bool pollI(void)
 		default:
 			/* こうはならないはず */
 			m_Status = ST_ABORT;
-			return false;
+			b = false;
+			break;
 		} 
-		b = HkNfcLlcpI_Start(mode, recvCbI);
+		b = b && HkNfcLlcpI_Start(mode, recvCbI);
 		if(b) {
 			uint8_t snep_head[6];
 			snep_head[0] = 0x10;
@@ -151,7 +155,6 @@ static bool pollI(void)
 			m_Status = ST_PUT;
 		} else {
 			m_Status = ST_ABORT;
-			HkNfcLlcpI_StopRequest();
 		}
 		break;
 
@@ -161,18 +164,21 @@ static bool pollI(void)
 			m_Status = ST_PUT_RESPONSE;
 		} else {
 			m_Status = ST_ABORT;
-			HkNfcLlcpI_StopRequest();
 		}
 		break;
 
 	case ST_PUT_RESPONSE:
-	case ST_SUCCESS:
-	case ST_ABORT:
 		b = HkNfcLlcpI_Poll();
 		break;
+
+	case ST_SUCCESS:
+	case ST_ABORT:
+		m_pMessage = 0;
+		HkNfcLlcpI_StopRequest();
+		return false;
 	}
 
-	return b;
+	return true;
 }
 
 
@@ -188,7 +194,6 @@ static void recvCbI(const void* pBuf, uint8_t len)
 		} else {
 			m_Status = ST_ABORT;
 		}
-		HkNfcLlcpI_StopRequest();
 		break;
 	}
 }
@@ -199,7 +204,7 @@ static void recvCbI(const void* pBuf, uint8_t len)
 #ifdef USE_SNEP_TARGET
 static bool pollT(void)
 {
-	bool b = false;
+	bool b;
 
 	switch(m_Status) {
 	case ST_START_PUT:
@@ -219,7 +224,6 @@ static bool pollT(void)
 			m_Status = ST_PUT;
 		} else {
 			m_Status = ST_ABORT;
-			HkNfcLlcpT_StopRequest();
 		}
 		break;
 
@@ -229,17 +233,21 @@ static bool pollT(void)
 			m_Status = ST_PUT_RESPONSE;
 		} else {
 			m_Status = ST_ABORT;
-			HkNfcLlcpT_StopRequest();
 		}
 		break;
+
 	case ST_PUT_RESPONSE:
-	case ST_SUCCESS:
-	case ST_ABORT:
 		b = HkNfcLlcpT_Poll();
 		break;
+
+	case ST_SUCCESS:
+	case ST_ABORT:
+		m_pMessage = 0;
+		HkNfcLlcpT_StopRequest();
+		return false;
 	}
 
-	return b;
+	return true;
 }
 
 
@@ -255,7 +263,6 @@ static void recvCbT(const void* pBuf, uint8_t len)
 		} else {
 			m_Status = ST_ABORT;
 		}
-		HkNfcLlcpT_StopRequest();
 		break;
 	}
 }
