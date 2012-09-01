@@ -6,7 +6,7 @@
  * HkNfcLlcp.cの内部にNFC-DEPを取り込んでいるが、NFC-DEPは外部公開しない.
  */
 /*
- * Copyright (c) 2012-2012, hiro99ma(uenokuma@gmail.com)
+ * Copyright (c) 2012-2012, hiro99ma
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,

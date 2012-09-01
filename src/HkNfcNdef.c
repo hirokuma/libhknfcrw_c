@@ -3,7 +3,7 @@
  * @brief	NDEF
  */
 /*
- * Copyright (c) 2012-2012, hiro99ma(uenokuma@gmail.com)
+ * Copyright (c) 2012-2012, hiro99ma
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification,
