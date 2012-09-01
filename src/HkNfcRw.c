@@ -2,7 +2,33 @@
  * @file	HkNfcRw.c
  * @brief	NFCアクセスのインターフェース実装.
  */
+/*
+ * Copyright (c) 2012-2012, hiro99ma(uenokuma@gmail.com)
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice,
+ *         this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright notice,
+ *         this list of conditions and the following disclaimer
+ *         in the documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ */
 #include "HkNfcRw.h"
+#include "HkNfcRwIn.h"
 #include "HkNfcA.h"
 #include "HkNfcB.h"
 #include "HkNfcF.h"
@@ -14,7 +40,9 @@
 #include "nfclog.h"
 
 static HkNfcType	m_Type = HKNFCTYPE_NONE;	///< アクティブなNFCタイプ
-
+#ifdef HKNFCRW_USE_LASTERR
+static uint8_t		m_LastError;	///< 最後に発生したエラー番号
+#endif	//HKNFCRW_USE_LASTERR
 
 
 /**
@@ -39,7 +67,9 @@ bool HkNfcRw_Open(void)
 	}
 
 	ret = NfcPcd_Init();
-	if(!ret) {
+	if(ret) {
+		HkNfcRw_SetLastError(HKNFCERR_NONE);
+	} else {
 		HkNfcRw_Close();
 	}
 	
@@ -61,6 +91,7 @@ void HkNfcRw_Close(void)
 		NfcPcd_RfOff();
 		NfcPcd_PortClose();
 	}
+	HkNfcRw_SetLastError(HKNFCERR_NONE);
 }
 
 
@@ -163,3 +194,30 @@ HkNfcType HkNfcRw_GetType(void)
 	return m_Type;
 }
 
+
+#ifdef HKNFCRW_USE_LASTERR
+/**
+ * @brief 最終発生エラー取得
+ * 
+ * 最後に発生したエラー値の取得
+ *
+ * @return	エラー値
+ */
+uint8_t HkNfcRw_GetLastError(void)
+{
+	return m_LastError;
+}
+
+
+/**
+ * @brief 最終発生エラー設定
+ * 
+ * 最後に発生したエラー値の設定
+ *
+ * @param[in]	err		設定するエラー値
+ */
+void HkNfcRw_SetLastError(uint8_t err)
+{
+	m_LastError = err;
+}
+#endif	//HKNFCRW_USE_LASTERR

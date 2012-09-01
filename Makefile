@@ -6,6 +6,7 @@ AR       = arm-none-eabi-ar
 
 USE_SNEP_TARGET = yes
 USE_SNEP_INITIATOR  = yes
+USE_LASTERR = yes
 
 TARGET = libhknfcrw.a
 
@@ -27,7 +28,7 @@ ifeq ($(USE_SNEP_TARGET),yes)
 SRCS += \
 	HkNfcLlcp.c \
 	HkNfcSnep.c
-CFLAGS += -DUSE_SNEP -DUSE_SNEP_TARGET
+CFLAGS += -DHKNFCRW_USE_SNEP -DHKNFCRW_USE_SNEP_TARGET
 endif
 
 #SNEP Initiator
@@ -37,10 +38,14 @@ ifneq ($(USE_SNEP_TARGET),yes)
 SRCS += \
 	HkNfcLlcp.c \
 	HkNfcSnep.c
-CFLAGS += -DUSE_SNEP
+CFLAGS += -DHKNFCRW_USE_SNEP
 endif
 
-CFLAGS += -DUSE_SNEP_INITIATOR
+CFLAGS += -DHKNFCRW_USE_SNEP_INITIATOR
+endif
+
+ifeq ($(USE_LASTERR),yes)
+CFLAGS += -DHKNFCRW_USE_LASTERR
 endif
 #####################################################
 

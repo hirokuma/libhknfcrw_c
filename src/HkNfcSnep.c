@@ -2,9 +2,35 @@
  * @file	HkNfcSnep.c
  * @brief	SNEP実装
  */
+/*
+ * Copyright (c) 2012-2012, hiro99ma(uenokuma@gmail.com)
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice,
+ *         this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright notice,
+ *         this list of conditions and the following disclaimer
+ *         in the documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ */
 #include "HkNfcSnep.h"
 #include "HkNfcLlcp.h"
 #include "HkNfcRw.h"
+#include "HkNfcRwIn.h"
 
 
 #define SNEP_SUCCESS		((uint8_t)0x81)
@@ -78,24 +104,27 @@ bool HkNfcSnep_PutStart(HkNfcSnepMode Mode, const HkNfcNdefMsg* pMsg)
 
 	if(Mode == HKNFCSNEP_MD_INITIATOR) {
 		// Initiatorとして動作
-#ifdef USE_SNEP_INITIATOR
+#ifdef HKNFCRW_USE_SNEP_INITIATOR
 		HkNfcType type = HkNfcRw_GetType();
 		if((type != HKNFCTYPE_A) && (type != HKNFCTYPE_F)) {
 			/* ポーリングの結果がNFC-AかNFC-Fだけ */
+			HkNfcRw_SetLastError(HKNFCERR_SNEP_PUT);
 			return false;
 		}
 		m_PollFunc = pollI;
 #else
+		HkNfcRw_SetLastError(HKNFCERR_SNEP_NOTSUP);
 		return false;
-#endif	//USE_SNEP_INITIATOR
+#endif	//HKNFCRW_USE_SNEP_INITIATOR
 	} else {
 		// Targetとして動作
-#ifdef USE_SNEP_TARGET
+#ifdef HKNFCRW_USE_SNEP_TARGET
 		Mode = HKNFCSNEP_MD_TARGET;
 		m_PollFunc = pollT;
 #else
+		HkNfcRw_SetLastError(HKNFCERR_SNEP_NOTSUP);
 		return false;
-#endif	//USE_SNEP_TARGET
+#endif	//HKNFCRW_USE_SNEP_TARGET
 	}
 
 	m_pMessage = pMsg;
@@ -115,7 +144,7 @@ bool HkNfcSnep_Poll(void)
 
 
 //////////////////////////////////////////////////////////////////////////
-#ifdef USE_SNEP_INITIATOR
+#ifdef HKNFCRW_USE_SNEP_INITIATOR
 static bool pollI(void)
 {
 	bool b;
@@ -137,6 +166,7 @@ static bool pollI(void)
 			/* こうはならないはず */
 			m_Status = ST_ABORT;
 			b = false;
+			HkNfcRw_SetLastError(HKNFCERR_SNEP_ERR);
 			break;
 		} 
 		b = b && HkNfcLlcpI_Start(mode, recvCbI);
@@ -169,6 +199,9 @@ static bool pollI(void)
 
 	case ST_PUT_RESPONSE:
 		b = HkNfcLlcpI_Poll();
+		if(!b) {
+			m_Status = ST_ABORT;
+		}
 		break;
 
 	case ST_SUCCESS:
@@ -197,11 +230,11 @@ static void recvCbI(const void* pBuf, uint8_t len)
 		break;
 	}
 }
-#endif	//USE_SNEP_INITIATOR
+#endif	//HKNFCRW_USE_SNEP_INITIATOR
 
 
 //////////////////////////////////////////////////////////////////////////
-#ifdef USE_SNEP_TARGET
+#ifdef HKNFCRW_USE_SNEP_TARGET
 static bool pollT(void)
 {
 	bool b;
@@ -238,6 +271,9 @@ static bool pollT(void)
 
 	case ST_PUT_RESPONSE:
 		b = HkNfcLlcpT_Poll();
+		if(!b) {
+			m_Status = ST_ABORT;
+		}
 		break;
 
 	case ST_SUCCESS:
@@ -266,4 +302,4 @@ static void recvCbT(const void* pBuf, uint8_t len)
 		break;
 	}
 }
-#endif	//USE_SNEP_TARGET
+#endif	//HKNFCRW_USE_SNEP_TARGET

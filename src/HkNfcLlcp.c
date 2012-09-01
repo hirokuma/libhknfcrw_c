@@ -2,6 +2,31 @@
  * @file	HkNfcLlcp.c
  * @brief	LLCP実装
  */
+/*
+ * Copyright (c) 2012-2012, hiro99ma(uenokuma@gmail.com)
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification,
+ * are permitted provided that the following conditions are met:
+ *
+ *  1. Redistributions of source code must retain the above copyright notice,
+ *         this list of conditions and the following disclaimer.
+ *  2. Redistributions in binary form must reproduce the above copyright notice,
+ *         this list of conditions and the following disclaimer
+ *         in the documentation and/or other materials provided with the distribution.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+ * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO,
+ * THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+ * ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
+ * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
+ * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
+ * SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION)
+ * HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT,
+ * STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING
+ * IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY
+ * OF SUCH DAMAGE.
+ */
 #include "HkNfcRw.h"
 #include "HkNfcDep.h"
 #include "HkNfcLlcp.h"
@@ -14,6 +39,9 @@
 //#define USE_DEBUG
 
 
+/*
+ * definition
+ */
 #define PL_VERSION		((uint8_t)0x01)
 #define PL_MIUX			((uint8_t)0x02)
 #define PL_WKS			((uint8_t)0x03)
@@ -37,8 +65,6 @@ static const char SN_SDP[] = "\x06\x0eurn:nfc:sn:sdp";
 #define LEN_SN_SDP		((uint8_t)16)
 static const char SN_SNEP[] = "\x06\x0furn:nfc:sn:snep";
 #define LEN_SN_SNEP		((uint8_t)17)
-
-
 
 
 #define PDU_INFOPOS		(2)		///< PDUパケットのInformation開始位置
@@ -94,6 +120,9 @@ static const char SN_SNEP[] = "\x06\x0furn:nfc:sn:snep";
 #define DEFAULT_LTO		((uint16_t)100)	// 100msec
 
 
+/*
+ * const
+ */
 /// LLCPのGeneralBytes
 static const uint8_t LlcpGb[] = {
 	// LLCP Magic Number
@@ -118,6 +147,9 @@ static const uint8_t LlcpGb[] = {
 };
 
 
+/*
+ * variables
+ */
 static uint8_t		m_DepMode = HKNFCDEPMODE_NONE;	///< 現在のDepMode
 static bool			m_bInitiator = false;		///< true:Initiator / false:Target or not DEP mode
 
@@ -138,6 +170,9 @@ static uint8_t		m_ValueRA = 0;			///< V(SA)
 static void (*m_pRecvCb)(const void* pBuf, uint8_t len) = 0;
 
 
+/*
+ * prototype
+ */
 static uint8_t analyzePdu(const uint8_t* pBuf, uint8_t len, uint8_t* pResPdu);
 static uint8_t analyzeSymm(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap);
 static uint8_t analyzePax(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap);
@@ -152,8 +187,6 @@ static uint8_t analyzeI(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t 
 static uint8_t analyzeRr(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap);
 static uint8_t analyzeRnr(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap);
 static uint8_t analyzeDummy(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap);
-//static uint8_t (*sAnalyzePdu[])(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap);
-
 static uint8_t analyzeParamList(const uint8_t *pBuf);
 static void createPdu(uint8_t type);
 static void killConnection(void);
@@ -163,7 +196,7 @@ static bool connect(void);
 
 /////////////////////////////////////////////////////////////////////////
 
-#ifdef USE_SNEP_INITIATOR
+#ifdef HKNFCRW_USE_SNEP_INITIATOR
 /*
  * NFC-DEP開始(Initiator)
  * 
@@ -177,6 +210,7 @@ bool HkNfcDep_StartAsInitiator(uint8_t mode)
 
 	if(m_DepMode != HKNFCDEPMODE_NONE) {
 		LOGE("Already DEP mode\n");
+		HkNfcRw_SetLastError(HKNFCERR_PCD_GETSTAT);
 		return false;
 	}
 
@@ -327,11 +361,11 @@ bool HkNfcDep_StopAsInitiator(void)
 					pResponseBuf, &res_len);
 	return b;
 }
-#endif	//USE_SNEP_INITIATOR
+#endif	//HKNFCRW_USE_SNEP_INITIATOR
 
 
 /////////////////////////////////////////////////////////////////////////
-#ifdef USE_SNEP_TARGET
+#ifdef HKNFCRW_USE_SNEP_TARGET
 /*
  * NFC-DEP開始(Target)
  * 
@@ -556,7 +590,7 @@ bool HkNfcDep_RespAsTarget(const void* pResponse, uint8_t ResponseLen)
 					(const uint8_t*)pResponse, ResponseLen);
 	return b;
 }
-#endif	//USE_SNEP_TARGET
+#endif	//HKNFCRW_USE_SNEP_TARGET
 
 
 /////////////////////////////////////////////////////////////////////////
@@ -792,11 +826,11 @@ static uint8_t analyzeDm(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t
 	}
 	LOGD("==>LSTAT_NONE\n");
 	m_LlcpStat = LSTAT_NONE;
-#ifdef USE_SNEP_INITIATOR
+#ifdef HKNFCRW_USE_SNEP_INITIATOR
 	if(m_bInitiator) {
 		HkNfcDep_StopAsInitiator();
 	}
-#endif	//USE_SNEP_INITIATOR
+#endif	//HKNFCRW_USE_SNEP_INITIATOR
 	HkNfcDep_Close();
 	NfcPcd_Reset();
 	return PDU_INFOPOS + 1;
@@ -1015,9 +1049,11 @@ static bool addSendData(const void* pBuf, uint8_t len)
 	LOGD("%s\n", __PRETTY_FUNCTION__);
 
 	if((m_LlcpStat < LSTAT_NOT_CONNECT) || (LSTAT_BUSY < m_LlcpStat)) {
+		HkNfcRw_SetLastError(HKNFCERR_LLCP_ADDDT);
 		return false;
 	}
 	if(m_SendLen + len > LLCP_MIU) {
+		HkNfcRw_SetLastError(HKNFCERR_LLCP_ADDDT);
 		return false;
 	}
 
@@ -1049,6 +1085,8 @@ static bool connect(void)
 		m_LlcpStat = LSTAT_CONNECTING;
 		
 		b = true;
+	} else {
+		HkNfcRw_SetLastError(HKNFCERR_LLCP_CONN);
 	}
 
 	return b;
@@ -1057,7 +1095,7 @@ static bool connect(void)
 
 /////////////////////////////////////////////////////////////////////////
 
-#ifdef USE_SNEP_INITIATOR
+#ifdef HKNFCRW_USE_SNEP_INITIATOR
 /**
  * @brief	LLCP(Initiator)開始
  * 
@@ -1078,6 +1116,7 @@ bool HkNfcLlcpI_Start(uint8_t mode, void (*pRecvCb)(const void* pBuf, uint8_t le
 		m_LlcpStat = LSTAT_NOT_CONNECT;
 		m_pRecvCb = pRecvCb;
 	} else {
+		HkNfcRw_SetLastError(HKNFCERR_LLCP_START);
 		killConnection();
 	}
 
@@ -1254,6 +1293,7 @@ bool HkNfcLlcpI_Poll(void)
 				m_LlcpStat = LSTAT_TERM;
 				m_DSAP = SAP_MNG;
 				m_SSAP = SAP_MNG;
+				HkNfcRw_SetLastError(HKNFCERR_LLCP_TIMEOUT);
 			} else {
 				if((m_LlcpStat == LSTAT_CONNECTING) && (m_LastSentPdu == PDU_CC)) {
 					m_LlcpStat = LSTAT_NORMAL;
@@ -1270,18 +1310,19 @@ bool HkNfcLlcpI_Poll(void)
 			LOGE("error\n");
 			//もうだめ
 			killConnection();
+			HkNfcRw_SetLastError(HKNFCERR_LLCP_ERR);
 		}
 	}
 	
 	return true;
 }
 
-#endif	//USE_SNEP_INITIATOR
+#endif	//HKNFCRW_USE_SNEP_INITIATOR
 
 
 //////////////////////////////////////////////////////////////////////
 
-#ifdef USE_SNEP_TARGET
+#ifdef HKNFCRW_USE_SNEP_TARGET
 /**
  * @brief	LLCP(Target)開始.
  * 
@@ -1306,6 +1347,8 @@ bool HkNfcLlcpT_Start(void (*pRecvCb)(const void* pBuf, uint8_t len))
 		m_pRecvCb = pRecvCb;
 
 		hk_start_timer(m_LinkTimeout);
+	} else {
+		HkNfcRw_SetLastError(HKNFCERR_LLCP_START);
 	}
 	
 	return ret;
@@ -1414,6 +1457,7 @@ bool HkNfcLlcpT_Poll(void)
 			m_LlcpStat = LSTAT_TERM;
 			m_DSAP = SAP_MNG;
 			m_SSAP = SAP_MNG;
+			HkNfcRw_SetLastError(HKNFCERR_LLCP_TIMEOUT);
 		} else if(b) {
 			uint8_t type;
 			uint8_t pdu = analyzePdu(pResponseBuf, len, &type);
@@ -1423,6 +1467,7 @@ bool HkNfcLlcpT_Poll(void)
 			//もうだめだろう
 			LOGE("recv error\n");
 			killConnection();
+			HkNfcRw_SetLastError(HKNFCERR_LLCP_ERR);
 		}
 	} else {
 		//PDU送信側
@@ -1520,9 +1565,10 @@ bool HkNfcLlcpT_Poll(void)
 			LOGE("send error\n");
 			//もうだめ
 			killConnection();
+			HkNfcRw_SetLastError(HKNFCERR_LLCP_ERR);
 		}
 	}
 	
 	return true;
 }
-#endif	//USE_SNEP_TARGET
+#endif	//HKNFCRW_USE_SNEP_TARGET
