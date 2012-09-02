@@ -5,20 +5,20 @@
 #include "hk_devaccess.h"
 
 // デバッグ設定
-//#define DBG_WRITEDATA
-//#define DBG_READDATA
 //#define HKNFCRW_ENABLE_DEBUG
 
 #ifdef HKNFCRW_ENABLE_DEBUG
+#define DBG_WRITEDATA
+#define DBG_READDATA
 #include <stdio.h>
 #define LOGI	printf
 #define LOGE	printf
-#define LOGD	printf
+#define printf	printf
 
 #else
 #define LOGI(...)
 #define LOGE(...)
-#define LOGD(...)
+#define printf(...)
 
 #endif	//HKNFCRW_ENABLE_DEBUG
 
@@ -46,11 +46,11 @@ static uint8_t usb_read(uint8_t *pData, uint8_t size);
 
 static bool usb_open()
 {
-	//LOGD("%s\n", __PRETTY_FUNCTION__);
+	//printf("%s\n", __PRETTY_FUNCTION__);
 
 	if(m_pContext) {
 		// open済み
-		LOGD("already opened\n");
+		printf("already opened\n");
 		return true;
 	}
 
@@ -128,11 +128,11 @@ static bool usb_open()
 			for(desc = 0; desc < idesc->bNumEndpoints; desc++) {
 				const struct libusb_endpoint_descriptor* EndPnt = &(idesc->endpoint[desc]);
 				if(EndPnt->bEndpointAddress & LIBUSB_ENDPOINT_IN) {
-					//LOGD("[IN]type : %x / addr : %x\n", EndPnt.bDescriptorType, EndPnt.bEndpointAddress);
+					//printf("[IN]type : %x / addr : %x\n", EndPnt.bDescriptorType, EndPnt.bEndpointAddress);
 					m_EndPntIn = EndPnt->bEndpointAddress;
 				}
 				else {
-					//LOGD("[OUT]type : %x / addr : %x\n", EndPnt.bDescriptorType, EndPnt.bEndpointAddress);
+					//printf("[OUT]type : %x / addr : %x\n", EndPnt.bDescriptorType, EndPnt.bEndpointAddress);
 					m_EndPntOut = EndPnt->bEndpointAddress;
 				}
 			}
@@ -149,7 +149,7 @@ static bool usb_open()
 	//Debug Out
 	libusb_set_debug(m_pContext, 3);
 
-	//LOGD("open!\n");
+	//printf("open!\n");
 	return true;
 }
 
@@ -166,7 +166,7 @@ static void usb_close()
 		m_pContext = NULL;
 	}
 
-	LOGD("%s\n", __PRETTY_FUNCTION__);
+	printf("%s\n", __PRETTY_FUNCTION__);
 }
 
 static uint8_t usb_write(const uint8_t *pData, uint8_t size)
@@ -240,9 +240,9 @@ uint16_t hk_nfcrw_write(const uint8_t* data, uint16_t len)
 {
 #ifdef DBG_READDATA
 	int i;
-	LOGD("---------------------\n");
+	printf("---------------------\n");
 	for(i=0; i<len; i++) {
-		LOGD("[W]%02x\n", data[i]);
+		printf("[W]%02x\n", data[i]);
 	}
 #endif
 
@@ -267,11 +267,24 @@ uint16_t hk_nfcrw_read(uint8_t* data, uint16_t len)
 
 #ifdef DBG_READDATA
 	int i;
-	LOGD("---------------------\n");
+	printf("---------------------\n");
 	for(i=0; i<ret_len; i++) {
-		LOGD("[R]%02x\n", data[i]);
+		printf("[R]%02x\n", data[i]);
 	}
 #endif
 
 	return ret_len;
+}
+
+
+/**
+ * ポート受信タイムアウト時間設定
+ * 
+ * タイムアウト処理が可能な場合、受信タイムアウト時間を設定する。
+ * タイムアウトがない場合は、何も処理しないし、#hk_nfcrw_read()にも影響はない。
+ *
+ * @param[in]	msec		タイムアウト時間(ミリ秒)。0のときはタイムアウト解除。
+ */
+void hk_nfcrw_read_timeout(uint16_t msec)
+{
 }

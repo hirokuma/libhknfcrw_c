@@ -146,9 +146,9 @@ bool HkNfcF_Polling(uint16_t systemCode)
 /**
  * @brief	読み込み
  * 
- * NFC-Fの指定したブロックを読み込む.
+ * NFC-Fの指定したブロックを読み込む(1ブロック=16byte).
  *
- * @param[out]	pBuf		読み込みデータ
+ * @param[out]	pBuf		読み込みデータ(16byte=#HKNFCF_SZ_BLOCK)
  * @param[in]	BlockNo		読み込みブロック番号
  * @return		true		成功
  * @return		false		失敗
@@ -160,49 +160,85 @@ bool HkNfcF_Read(uint8_t* pBuf, uint8_t BlockNo)
 	uint8_t* pRes = NfcPcd_ResponseBuf();
 
 	pCmd[0] = 16;
-	pCmd[1] = 0x06;	// Read w/o Enc.
+	pCmd[1] = 0x06;		// Read w/o Enc.
 	hk_memcpy(pCmd + 2, NfcPcd_NfcId(), NFCID2_LEN);
 	pCmd[10] = 0x01;				//サービス数
+#if 1
+	pCmd[11] = l16(HKNFCF_SVCCODE_RO);
+	pCmd[12] = h16(HKNFCF_SVCCODE_RO);
+#else
 	pCmd[11] = l16(m_SvcCode);
 	pCmd[12] = h16(m_SvcCode);
+#endif
 	pCmd[13] = 0x01;			//ブロック数
 	uint16_t blist = _create_blocklist2(BlockNo, AM_NORMAL, SCO_NORMAL);
 	pCmd[14] = h16(blist);
 	pCmd[15] = l16(blist);
 	bool ret = NfcPcd_CommunicateThruEx(
 					kDEFAULT_TIMEOUT,
-					pCmd, 16,
+					pCmd, pCmd[0],
 					pRes, &len);
-	if (!ret || (pRes[0] != 0x07)
-	  || (hk_memcmp(pRes + 1, NfcPcd_NfcId(), NFCID2_LEN) != 0)
-	  || (pRes[9] != 0x00)
-	  || (pRes[10] != 0x00)) {
-		LOGE("read : ret=%d / %02x / %02x / %02x\n", ret, pRes[0], pRes[9], pRes[10]);
+	if (!ret || (len != pRes[0]) || (pRes[0] != 13 + HKNFCF_SZ_BLOCK) || (pRes[1] != 0x07)
+	  || (hk_memcmp(pRes + 2, NfcPcd_NfcId(), NFCID2_LEN) != 0)
+	  || (pRes[10] != 0x00)
+	  || (pRes[11] != 0x00)) {
+		LOGE("read : ret=%d / %d / %d / %02x / %02x\n", ret, len, pRes[0], pRes[10], pRes[11]);
 		return false;
 	}
-	//NfcPcd::responseBuf(11) == 0x01
-	hk_memcpy(pBuf, &pRes[12], 16);
+	hk_memcpy(pBuf, &pRes[13], HKNFCF_SZ_BLOCK);
 
 	return true;
 }
 
 
 /**
- * @brief	(未実装)書き込み
+ * @brief	書き込み
  * 
- * NFC-Fの指定したブロックに書き込む.
+ * NFC-Fの指定したブロックに書き込む(1ブロック=16byte).
  *
- * @param[in]	pBuf		書き込みデータ
+ * @param[in]	pBuf		書き込みデータ(16byte=#HKNFCF_SZ_BLOCK)
  * @param[in]	BlockNo		書き込みブロック番号
  * @return		true		成功
  * @return		false		失敗
  */
 bool HkNfcF_Write(const uint8_t* pBuf, uint8_t BlockNo)
 {
-	return false;
+	uint8_t len;
+	uint8_t* pCmd = NfcPcd_CommandBuf();
+	uint8_t* pRes = NfcPcd_ResponseBuf();
+	
+	pCmd[0] = (uint8_t)(14 + 2 + HKNFCF_SZ_BLOCK);		//len
+	pCmd[1] = 0x08;		// Read w/o Enc.
+	hk_memcpy(pCmd + 2, NfcPcd_NfcId(), NFCID2_LEN);
+	pCmd[10] = 0x01;				//サービス数
+#if 1
+	pCmd[11] = l16(HKNFCF_SVCCODE_RW);
+	pCmd[12] = h16(HKNFCF_SVCCODE_RW);
+#else
+	pCmd[11] = l16(m_SvcCode);
+	pCmd[12] = h16(m_SvcCode);
+#endif
+	pCmd[13] = 0x01;			//ブロック数
+	uint16_t blist = _create_blocklist2(BlockNo, AM_NORMAL, SCO_NORMAL);
+	pCmd[14] = h16(blist);
+	pCmd[15] = l16(blist);
+	hk_memcpy(pCmd + 16, pBuf, HKNFCF_SZ_BLOCK);
+	bool ret = NfcPcd_CommunicateThruEx(
+					kDEFAULT_TIMEOUT,
+					pCmd, pCmd[0],
+					pRes, &len);
+	if (!ret || (len != pRes[0]) || (pRes[0] != 12) || (pRes[1] != 0x09)
+	  || (hk_memcmp(pRes + 2, NfcPcd_NfcId(), NFCID2_LEN) != 0)
+	  || (pRes[10] != 0x00)
+	  || (pRes[11] != 0x00)) {
+		LOGE("read : ret=%d / %d / %d / %02x / %02x\n", ret, len, pRes[0], pRes[10], pRes[11]);
+		return false;
+	}
+
+	return true;
 }
 
-
+#if 0
 /**
  * @brief	サービスコード指定
  * 
@@ -214,9 +250,9 @@ void HkNfcF_SetServiceCode(uint16_t svccode)
 {
 	m_SvcCode = svccode;
 }
+#endif
 
-
-#ifdef QHKNFCRW_USE_FELICA
+#ifdef HKNFCF_USE_FELICA
 /**
  *
  */
@@ -376,5 +412,5 @@ bool HkNfcF_Push(const uint8_t* pData, uint8_t DataLen)
 
 	return true;
 }
-#endif	//QHKNFCRW_USE_FELICA
+#endif	//HKNFCF_USE_FELICA
 

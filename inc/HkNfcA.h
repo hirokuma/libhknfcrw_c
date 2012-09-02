@@ -79,26 +79,27 @@ typedef uint8_t HkNfcASelRes;
 /// @brief	SEL_RESからTPE端末かどうか判別する
 #define HKNFCA_IS_SELRES_TPE(selres)	((selres & HKNFCA_SELRES_TPE) == HKNFCA_SELRES_TPE)
 
-#if 0
-enum Error {
-	SUCCESS				= 0x00,
+/// @def	HKNFCA_SZ_BLOCK
+/// @brief	1ブロックサイズ
+#define HKNFCA_SZ_BLOCK		(4)
 
-	ERR_TIMEOUT			= 0x01,
-	ERR_CRC				= 0x02,
-	ERR_PARITY			= 0x03,
-	ERR_ANTICOL			= 0x04,
-	ERR_FRAMING			= 0x05,
-	ERR_BITCOL			= 0x06,
-	ERR_LESSBUF			= 0x07,
-	ERR_RFBUF			= 0x08,
-	ERR_
-};
-#endif
+/// @def	HKNFCA_SZ_BLOCK_R
+/// @brief	読込時のブロックサイズ
+#define HKNFCA_SZ_BLOCK_R		(16)
+
+/// @def	HKNFCA_SZ_BLOCK_W
+/// @brief	書込時のブロックサイズ
+#define HKNFCA_SZ_BLOCK_W		(4)
+
 
 bool HkNfcA_Polling(void);
 HkNfcASelRes HkNfcA_GetSelRes(void);
 
 bool HkNfcA_Read(uint8_t* pBuf, uint8_t BlockNo);
 bool HkNfcA_Write(const uint8_t* pBuf, uint8_t BlockNo);
+
+#ifdef HKNFCA_USE_CLASSIC
+bool HkNfcA_ClassicRead(uint8_t* pBuf, uint8_t BlockNo);
+#endif	/* HKNFCA_USE_CLASSIC */
 
 #endif /* HKNFCA_H */

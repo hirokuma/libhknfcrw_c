@@ -598,12 +598,8 @@ bool NfcPcd_CommunicateThruEx(
 		*pResponseLen = 1;
 	} else {
 		//Statusは返さない
-		if((s_ResponseBuf[POS_RESDATA] != 0x00) || (res_len != (3 + s_ResponseBuf[POS_RESDATA+1]))) {
-			HkNfcRw_SetLastError(HKNFCERR_PCD_COMMTHRUEX);
-			return false;
-		}
-		*pResponseLen = (uint8_t)(s_ResponseBuf[POS_RESDATA+1] - 1);
-		hk_memcpy(pResponse, s_ResponseBuf + RESHEAD_LEN + 2, *pResponseLen);
+		*pResponseLen = (uint8_t)(res_len - 3);
+		hk_memcpy(pResponse, s_ResponseBuf + POS_RESDATA + 1, *pResponseLen);
 	}
 
 	return true;
@@ -694,6 +690,7 @@ bool NfcPcd_InJumpForPsl(DepInitiatorParam* pParam)
 	//LOGD("%s", __PRETTY_FUNCTION__);
 	return _inJump(0x46, pParam);
 }
+#endif	//HKNFCRW_USE_SNEP_INITIATOR
 
 
 /**
@@ -740,7 +737,6 @@ bool NfcPcd_InDataExchange(
 
 	return true;
 }
-#endif	//HKNFCRW_USE_SNEP_INITIATOR
 
 
 /**

@@ -42,6 +42,8 @@ endif
 
 CFLAGS += -DUSE_SNEP_INITIATOR
 endif
+
+#CFLAGS += -DHKNFCRW_ENABLE_DEBUG
 #####################################################
 
 

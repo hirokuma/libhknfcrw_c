@@ -46,7 +46,9 @@ static HkNfcASelRes		m_SelRes = HKNFCA_SELRES_UNKNOWN;
 #define KEY_B_AUTH		((uint8_t)0x61)
 #define READ			((uint8_t)0x30)
 #define UPDATE			((uint8_t)0xa0)
-
+#define WRITE			((uint8_t)0xa2)
+#define SECTOR_SELECT	((uint8_t)0xc2)
+#define ACK				((uint8_t)0x0a)
 
 /**
  * @brief	ポーリング
@@ -130,12 +132,100 @@ HkNfcASelRes HkNfcA_GetSelRes(void)
  * 
  * NFC-A読み込みの指定したブロックを読み込む.
  *
- * @param[out]	pBuf		読み込みデータ
+ * @param[out]	pBuf		読み込みデータ(16byte=#HKNFCA_SZ_BLOCK_R)
  * @param[in]	BlockNo		読み込みブロック番号
  * @return		true		成功
  * @return		false		失敗
  */
 bool HkNfcA_Read(uint8_t* pBuf, uint8_t BlockNo)
+{
+	uint8_t* pCmd = NfcPcd_CommandBuf();
+	uint8_t* pRes = NfcPcd_ResponseBuf();
+
+	pCmd[0] = READ;
+	pCmd[1] = BlockNo;
+
+	uint8_t len;
+	bool ret;
+
+	// Read
+#if 0
+	ret = NfcPcd_CommunicateThruEx(
+					kDEFAULT_TIMEOUT,
+					pCmd, 2,
+					pRes, &len);
+#else
+	ret = NfcPcd_InDataExchange(
+					pCmd, 2,
+					pRes, &len);
+#endif
+	if(ret && (len == HKNFCA_SZ_BLOCK_R)) {
+		hk_memcpy(pBuf, pRes, len);
+	} else {
+		LOGE("read fail : %d / %d / %02x\n", ret, len, (len > 0) ? pRes[0] : 0xff);
+		ret = false;
+	}
+
+	return ret;
+}
+
+
+/**
+ * @brief	書き込み
+ * 
+ * NFC-Aの指定したブロックに書き込む.
+ *
+ * @param[in]	pBuf		書き込みデータ(4byte=#HKNFCA_SZ_BLOCK_W)
+ * @param[in]	BlockNo		書き込みブロック番号
+ * @return		true		成功
+ * @return		false		失敗
+ */
+bool HkNfcA_Write(const uint8_t* pBuf, uint8_t BlockNo)
+{
+	uint8_t* pCmd = NfcPcd_CommandBuf();
+	uint8_t* pRes = NfcPcd_ResponseBuf();
+
+	pCmd[0] = WRITE;
+	pCmd[1] = BlockNo;
+	hk_memcpy(pCmd + 2, pBuf, HKNFCA_SZ_BLOCK_W);
+
+	uint8_t len;
+	bool ret;
+
+	// Read
+#if 0
+	ret = NfcPcd_CommunicateThruEx(
+					kDEFAULT_TIMEOUT,
+					pCmd, (uint8_t)(2 + HKNFCA_SZ_BLOCK_W),
+					pRes, &len);
+#else
+	ret = NfcPcd_InDataExchange(
+					pCmd, (uint8_t)(2 + HKNFCA_SZ_BLOCK_W),
+					pRes, &len);
+#endif
+	if(ret && (len == 0)) {
+		ret = true;
+	} else {
+		LOGE("write fail\n");
+		ret = false;
+	}
+
+	return ret;
+}
+
+
+#ifdef HKNFCA_USE_CLASSIC
+/**
+ * @brief	読み込み
+ * 
+ * NFC-A読み込みの指定したブロックを読み込む.
+ *
+ * @param[out]	pBuf		読み込みデータ(4byte=#HKNFCA_SZ_BLOCK)
+ * @param[in]	BlockNo		読み込みブロック番号
+ * @return		true		成功
+ * @return		false		失敗
+ */
+bool HkNfcA_ClassicRead(uint8_t* pBuf, uint8_t BlockNo)
 {
 	uint8_t* pCmd = NfcPcd_CommandBuf();
 	pCmd[0] = 0x01;
@@ -151,7 +241,6 @@ bool HkNfcA_Read(uint8_t* pBuf, uint8_t BlockNo)
 	uint8_t len;
 	bool ret;
 
-#if 0
 	// Key A Authentication
 	pCmd[1] = KEY_A_AUTH;
 	ret = NfcPcd_CommunicateThruEx(
@@ -162,9 +251,7 @@ bool HkNfcA_Read(uint8_t* pBuf, uint8_t BlockNo)
 		LOGE("read fail1\n");
 		return false;
 	}
-#endif
 
-#if 0
 	// Key B Authentication
 	pCmd[1] = KEY_B_AUTH;
 	ret = NfcPcd_CommunicateThruEx(
@@ -175,7 +262,6 @@ bool HkNfcA_Read(uint8_t* pBuf, uint8_t BlockNo)
 		LOGE("read fail2\n");
 		return false;
 	}
-#endif
 
 	// Read
 	pCmd[1] = READ;
@@ -191,19 +277,4 @@ bool HkNfcA_Read(uint8_t* pBuf, uint8_t BlockNo)
 
 	return ret;
 }
-
-
-/**
- * @brief	(未実装)書き込み
- * 
- * NFC-Aの指定したブロックに書き込む.
- *
- * @param[in]	pBuf		書き込みデータ
- * @param[in]	BlockNo		書き込みブロック番号
- * @return		true		成功
- * @return		false		失敗
- */
-bool HkNfcA_Write(const uint8_t* pBuf, uint8_t BlockNo)
-{
-	return false;
-}
+#endif	/* HKNFCA_USE_CLASSIC */
