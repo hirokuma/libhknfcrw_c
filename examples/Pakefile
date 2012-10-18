@@ -8,10 +8,10 @@ INCDIR = ../inc
 
 LIBNAME = ../libhknfcrw_cyg.a
 
-DEMO = nfc
+#DEMO = nfc
 #DEMO = dep
 #DEMO = llcp
-#DEMO = snep
+DEMO = snep
 #DEMO = reset
 
 SRCS = \

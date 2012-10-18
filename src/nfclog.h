@@ -26,7 +26,7 @@
  * OF SUCH DAMAGE.
  */
 
-//#define HKNFCRW_ENABLE_DEBUG
+#define HKNFCRW_ENABLE_DEBUG
 
 #ifdef HKNFCRW_ENABLE_DEBUG
 #include <stdio.h>

@@ -33,7 +33,7 @@
 #include "NfcPcd.h"
 #include "hk_misc.h"
 
-#define LOG_TAG "HkNfcDep"
+#define LOG_TAG "HkNfcLlcp"
 #include "nfclog.h"
 
 //#define USE_DEBUG
@@ -119,6 +119,15 @@ static const char SN_SNEP[] = "\x06\x0furn:nfc:sn:snep";
 
 #define DEFAULT_LTO		((uint16_t)100)	// 100msec
 
+#define ACT_TARGET		((uint8_t)0)
+#define ACT_INITIATOR	((uint8_t)1)
+
+#define SR_RECEIVER		((uint8_t)0)
+#define SR_SENDER		((uint8_t)1)
+
+#define PRI_NONE		((uint8_t)0)
+#define PRI_RECV		((uint8_t)1)
+
 
 /*
  * const
@@ -151,17 +160,18 @@ static const uint8_t LlcpGb[] = {
  * variables
  */
 static uint8_t		m_DepMode = HKNFCDEPMODE_NONE;	///< 現在のDepMode
-static bool			m_bInitiator = false;		///< true:Initiator / false:Target or not DEP mode
+static uint8_t		m_Initiator = ACT_TARGET;		///< Initiator / Target or not DEP mode
 
-static uint16_t		m_LinkTimeout;		///< Link Timeout値[msec](デフォルト:100ms)
-static bool			m_bSend = false;			///< true:送信側 / false:受信側
-static uint8_t		m_LlcpStat = LSTAT_NONE;			///< LLCP状態
-static uint8_t		m_DSAP = 0;				///< DSAP
-static uint8_t		m_SSAP = 0;				///< SSAP
+static uint16_t		m_LinkTimeout;					///< Link Timeout値[msec](デフォルト:100ms)
+static uint8_t		m_SendRecv = SR_RECEIVER;		///< 送信側 / 受信側
+static uint8_t		m_LlcpStat = LSTAT_NONE;		///< LLCP状態
+static uint8_t		m_PrevRecvI = PRI_NONE;			///< 直前にI PDUを受信したか
+static uint8_t		m_DSAP = 0;						///< DSAP
+static uint8_t		m_SSAP = 0;						///< SSAP
 static uint8_t		m_LastSentPdu = PDU_NONE;		///< 最後に送信したPDU
 static uint8_t		m_CommandLen = 0;		///< 次に送信するデータ長
 static uint8_t		m_SendBuf[LLCP_MIU];	///< 送信データバッファ
-static uint8_t		m_SendLen = 0;				///< 送信データサイズ
+static uint8_t		m_SendLen = 0;			///< 送信データサイズ
 static uint8_t		m_ValueS = 0;			///< V(S)
 static uint8_t		m_ValueR = 0;			///< V(R)
 static uint8_t		m_ValueSA = 0;			///< V(SA)
@@ -245,7 +255,7 @@ bool HkNfcDep_StartAsInitiator(uint8_t mode)
 	}
 
 	m_DepMode = mode;
-	m_bInitiator = true;
+	m_Initiator = ACT_INITIATOR;
 
 	const uint8_t* pRecv = prm.pResponse;
 
@@ -602,7 +612,7 @@ void HkNfcDep_Close(void)
 {
 	LOGD("%s\n", __PRETTY_FUNCTION__);
 
-	m_bSend = false;
+	m_SendRecv = SR_RECEIVER;
 	m_LlcpStat = LSTAT_NONE;
 	m_DepMode = HKNFCDEPMODE_NONE;
 	m_DSAP = 0;
@@ -657,6 +667,8 @@ static uint8_t (*sAnalyzePdu[])(const uint8_t* pBuf, uint8_t len, uint8_t dsap, 
  */
 static uint8_t analyzePdu(const uint8_t* pBuf, uint8_t len, uint8_t* pResPdu)
 {
+	m_PrevRecvI = PRI_NONE;
+
 	*pResPdu = (uint8_t)(((*pBuf & 0x03) << 2) | (*(pBuf+1) >> 6));
 	if(*pResPdu > PDU_LAST) {
 		LOGE("BAD PDU\n");
@@ -827,7 +839,7 @@ static uint8_t analyzeDm(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t
 	LOGD("==>LSTAT_NONE\n");
 	m_LlcpStat = LSTAT_NONE;
 #ifdef HKNFCRW_USE_SNEP_INITIATOR
-	if(m_bInitiator) {
+	if(m_Initiator == ACT_INITIATOR) {
 		HkNfcDep_StopAsInitiator();
 	}
 #endif	//HKNFCRW_USE_SNEP_INITIATOR
@@ -860,6 +872,7 @@ static uint8_t analyzeI(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t 
 			LOGD("[I]%02x\n", *(pBuf + i));
 		}
 #endif	//USE_DEBUG
+		m_PrevRecvI = PRI_RECV;
 		(*m_pRecvCb)(pBuf, len);
 	} else {
 		LOGD("bad sequence(NS:%d / VR:%d)\n", NowS, m_ValueR);
@@ -1112,7 +1125,7 @@ bool HkNfcLlcpI_Start(uint8_t mode, void (*pRecvCb)(const void* pBuf, uint8_t le
 	bool ret = HkNfcDep_StartAsInitiator(mode);
 	if(ret) {
 		//PDU送信側
-		m_bSend = true;
+		m_SendRecv = SR_SENDER;
 		m_LlcpStat = LSTAT_NOT_CONNECT;
 		m_pRecvCb = pRecvCb;
 	} else {
@@ -1216,7 +1229,7 @@ bool HkNfcLlcpI_Poll(void)
 		return false;
 	}
 
-	if(m_bSend) {
+	if(m_SendRecv == SR_SENDER) {
 		//PDU送信時
 		switch(m_LlcpStat) {
 		case LSTAT_NONE:
@@ -1249,9 +1262,17 @@ bool HkNfcLlcpI_Poll(void)
 				m_SendLen = 0;
 				m_ValueS++;
 			} else {
-				m_CommandLen = PDU_INFOPOS + 1;
-				createPdu(PDU_RR);
-				pCommandBuf[PDU_INFOPOS] = m_ValueR;		//N(R)
+				if(m_PrevRecvI == PRI_RECV) {
+					//直前がI PDUだった
+					m_CommandLen = PDU_INFOPOS + 1;
+					createPdu(PDU_RR);
+					pCommandBuf[PDU_INFOPOS] = m_ValueR;		//N(R)
+				} else {
+					//それ以外
+					m_CommandLen = PDU_INFOPOS;
+					LOGD("*");
+					createPdu(PDU_SYMM);
+				}
 			}
 			break;
 
@@ -1289,7 +1310,7 @@ bool HkNfcLlcpI_Poll(void)
 			if(hk_is_timeout()) {
 				//相手から通信が返ってこない
 				LOGE("Link timeout\n");
-				m_bSend = true;
+				m_SendRecv = SR_SENDER;
 				m_LlcpStat = LSTAT_TERM;
 				m_DSAP = SAP_MNG;
 				m_SSAP = SAP_MNG;
@@ -1300,7 +1321,7 @@ bool HkNfcLlcpI_Poll(void)
 				}
 
 				//受信は済んでいるので、次はPDU送信側になる
-				m_bSend = true;
+				m_SendRecv = SR_SENDER;
 				m_CommandLen = 0;
 
 				uint8_t type;
@@ -1342,7 +1363,7 @@ bool HkNfcLlcpT_Start(void (*pRecvCb)(const void* pBuf, uint8_t len))
 		LOGD("%s -- success\n", __PRETTY_FUNCTION__);
 		
 		//PDU受信側
-		m_bSend = false;
+		m_SendRecv = SR_RECEIVER;
 		m_LlcpStat = LSTAT_NOT_CONNECT;
 		m_pRecvCb = pRecvCb;
 
@@ -1446,14 +1467,14 @@ bool HkNfcLlcpT_Poll(void)
 		return false;
 	}
 
-	if(!m_bSend) {
+	if(m_SendRecv == SR_RECEIVER) {
 		//PDU受信側
 		uint8_t len;
 		bool b = HkNfcDep_RecvAsTarget(pResponseBuf, &len);
 		if(hk_is_timeout()) {
 			//相手から通信が返ってこない
 			LOGE("Link timeout\n");
-			m_bSend = true;
+			m_SendRecv = SR_SENDER;
 			m_LlcpStat = LSTAT_TERM;
 			m_DSAP = SAP_MNG;
 			m_SSAP = SAP_MNG;
@@ -1462,7 +1483,7 @@ bool HkNfcLlcpT_Poll(void)
 			uint8_t type;
 			uint8_t pdu = analyzePdu(pResponseBuf, len, &type);
 			//PDU送信側になる
-			m_bSend = true;
+			m_SendRecv = SR_SENDER;
 		} else {
 			//もうだめだろう
 			LOGE("recv error\n");
@@ -1504,9 +1525,17 @@ bool HkNfcLlcpT_Poll(void)
 				m_SendLen = 0;
 				m_ValueS++;
 			} else {
-				m_CommandLen = PDU_INFOPOS + 1;
-				createPdu(PDU_RR);
-				pCommandBuf[PDU_INFOPOS] = m_ValueR;		//N(R)
+				if(m_PrevRecvI == PRI_RECV) {
+					//直前がI PDUだった
+					m_CommandLen = PDU_INFOPOS + 1;
+					createPdu(PDU_RR);
+					pCommandBuf[PDU_INFOPOS] = m_ValueR;		//N(R)
+				} else {
+					//それ以外
+					m_CommandLen = PDU_INFOPOS;
+					LOGD("*");
+					createPdu(PDU_SYMM);
+				}
 			}
 			break;
 
@@ -1546,7 +1575,7 @@ bool HkNfcLlcpT_Poll(void)
 					m_LlcpStat = LSTAT_WAIT_DM;
 
 					//PDU受信側になる
-					m_bSend = false;
+					m_SendRecv = SR_RECEIVER;
 					m_CommandLen = 0;
 					
 					hk_start_timer(m_LinkTimeout);
@@ -1556,7 +1585,7 @@ bool HkNfcLlcpT_Poll(void)
 					m_LlcpStat = LSTAT_NORMAL;
 				}
 				//PDU受信側になる
-				m_bSend = false;
+				m_SendRecv = SR_RECEIVER;
 				m_CommandLen = 0;
 				
 				hk_start_timer(m_LinkTimeout);

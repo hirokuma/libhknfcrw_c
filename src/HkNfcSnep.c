@@ -31,6 +31,7 @@
 #include "HkNfcLlcp.h"
 #include "HkNfcRw.h"
 #include "HkNfcRwIn.h"
+#include "nfclog.h"
 
 
 #define SNEP_SUCCESS		((uint8_t)0x81)
@@ -182,8 +183,10 @@ static bool pollI(void)
 			b = b && HkNfcLlcpI_AddSendData(m_pMessage->Data, m_pMessage->Length);
 		}
 		if(b) {
+			LOGD("==>pollI : ST_START_PUT==>ST_PUT\n");
 			m_Status = ST_PUT;
 		} else {
+			LOGD("==>pollI : ST_START_PUT==>abort\n");
 			m_Status = ST_ABORT;
 		}
 		break;
@@ -191,21 +194,27 @@ static bool pollI(void)
 	case ST_PUT:
 		b = HkNfcLlcpI_SendRequest();
 		if(b) {
+			LOGD("==>pollI : ST_PUT==>ST_PUT_RESPONSE\n");
 			m_Status = ST_PUT_RESPONSE;
 		} else {
+			LOGD("==>pollI : ST_PUT==>abort\n");
 			m_Status = ST_ABORT;
 		}
 		break;
 
 	case ST_PUT_RESPONSE:
 		b = HkNfcLlcpI_Poll();
-		if(!b) {
+		if(b) {
+			LOGD("==>pollI : ST_PUT_RESPONSE\n");
+		} else {
+			LOGD("==>pollI : ST_PUT_RESPONSE==>abort\n");
 			m_Status = ST_ABORT;
 		}
 		break;
 
 	case ST_SUCCESS:
 	case ST_ABORT:
+		LOGD("==>pollI : %02x\n", m_Status);
 		m_pMessage = 0;
 		HkNfcLlcpI_StopRequest();
 		return false;
@@ -224,8 +233,10 @@ static void recvCbI(const void* pBuf, uint8_t len)
 		//PUT後の応答
 		if(pData[1] == SNEP_SUCCESS) {
 			m_Status = ST_SUCCESS;
+			LOGD("==>recvCbI : ST_PUT_RESPONSE==>ST_SUCCESS\n");
 		} else {
 			m_Status = ST_ABORT;
+			LOGD("==>recvCbI : ST_PUT_RESPONSE==>abort\n");
 		}
 		break;
 	}
@@ -256,6 +267,7 @@ static bool pollT(void)
 		if(b) {
 			m_Status = ST_PUT;
 		} else {
+			LOGD("==>pollT : ST_START_PUT==>abort\n");
 			m_Status = ST_ABORT;
 		}
 		break;
@@ -265,6 +277,7 @@ static bool pollT(void)
 		if(b) {
 			m_Status = ST_PUT_RESPONSE;
 		} else {
+			LOGD("==>pollT : ST_PUT==>abort\n");
 			m_Status = ST_ABORT;
 		}
 		break;
@@ -272,12 +285,14 @@ static bool pollT(void)
 	case ST_PUT_RESPONSE:
 		b = HkNfcLlcpT_Poll();
 		if(!b) {
+			LOGD("==>pollT : ST_PUT_RESPONSE==>abort\n");
 			m_Status = ST_ABORT;
 		}
 		break;
 
 	case ST_SUCCESS:
 	case ST_ABORT:
+		LOGD("==>pollT : %02x\n", m_Status);
 		m_pMessage = 0;
 		HkNfcLlcpT_StopRequest();
 		return false;
