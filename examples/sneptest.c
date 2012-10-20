@@ -29,6 +29,8 @@ int nfc_test()
 		HkNfcRw_Close();
 		return -1;
 	}
+
+#if 0
 	printf("Card Detect & read\n");
 
 	while(1) {
@@ -73,6 +75,15 @@ int nfc_test()
 		
 		hk_msleep(1000);
 	}
+#else
+	while(1) {
+		_snep(STR_NFCF);
+		HkNfcSnepStop();
+		hk_msleep(1000);
+		HkNfcRw_Reset();
+		printf("-----------------------\n");
+	}
+#endif
 
 	printf("Close\n");
 
@@ -87,15 +98,19 @@ static void _snep(const char* pStr)
 	HkNfcNdefMsg msg;
 	bool b;
 
-	b = HkNfcNdef_CreateText(&msg, pStr, _strlen(pStr), LANGCODE_EN);
+#if 1
+//	b = HkNfcNdef_CreateText(&msg, pStr, _strlen(pStr), LANGCODE_EN);
+	b = HkNfcNdef_CreateUrl(&msg, HKNFCNDEF_URI_HTTP, "google.com");
 	if(!b) {
 		printf("ndef fail\n");
 		return;
 	}
+#endif
 
 	
 	/* InitiatorÇÃèÍçáÅAç≈å„Ç…PollingÇµÇΩTechnologyÇ≈DEPÇ∑ÇÈ */
-	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_INITIATOR, &msg);
+//	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_INITIATOR, &msg);
+	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_TARGET, &msg);
 	if(!b) {
 		printf("putstart fail : %02x\n", HkNfcRw_GetLastError());
 		return;

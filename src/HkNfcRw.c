@@ -117,6 +117,15 @@ void HkNfcRw_RfOff(void)
 
 
 /**
+ *
+ */
+void HkNfcRw_Reset(void)
+{
+	NfcPcd_Reset();
+}
+
+
+/**
  * ターゲットの探索
  *
  * @param[in]	bNfcA	NfcA(null時は探索しない)

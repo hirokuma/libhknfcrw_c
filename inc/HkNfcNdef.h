@@ -66,7 +66,17 @@ typedef enum HkNfcNdefRecordType {
  */
 #define LANGCODE_JP		HKNFCNDEF_LC('j', 'a')
 
+
+typedef uint8_t		HkNfcHttpType;
+#define HKNFCNDEF_URI_HTTP_WWW			((HkNfcHttpType)0x01)
+#define HKNFCNDEF_URI_HTTPS_WWW			((HkNfcHttpType)0x02)
+#define HKNFCNDEF_URI_HTTP				((HkNfcHttpType)0x03)
+#define HKNFCNDEF_URI_HTTPS				((HkNfcHttpType)0x04)
+
+
 bool HkNfcNdef_CreateText(HkNfcNdefMsg* pMsg,
 			const void* pUTF8, uint16_t len, HkNfcNdefLangCode LangCode);
+
+bool HkNfcNdef_CreateUrl(HkNfcNdefMsg* pMsg, HkNfcHttpType HttpType, const char* pUrl);
 
 #endif /* HK_NFCNDEF_H */

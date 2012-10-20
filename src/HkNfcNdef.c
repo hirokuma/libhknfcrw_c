@@ -65,6 +65,29 @@ bool HkNfcNdef_CreateText(HkNfcNdefMsg* pMsg, const void* pUTF8, uint16_t len, H
 	pMsg->Data[pos++] = (uint8_t)(LangCode >> 8);
 	pMsg->Data[pos++] = (uint8_t)LangCode;
 	hk_memcpy(pMsg->Data + pos, pUTF8, len);
+
+	pMsg->Length = (uint16_t)(pos + len);
+
+	return true;
+}
+
+
+bool HkNfcNdef_CreateUrl(HkNfcNdefMsg* pMsg, HkNfcHttpType HttpType, const char* pUrl)
+{
+	uint16_t pos = 0;
+	uint8_t len = (uint8_t)hk_strlen(pUrl);
+	
+	pMsg->Data[pos++] = (uint8_t)(MB | ME | SR | TNF_WK);
+	pMsg->Data[pos++] = 1;		//Type Length
+	pMsg->Data[pos++] = (uint8_t)(1 + len);		//Payload Length
+	//ID Lengthは、なし
+	pMsg->Data[pos++] = 'U';		//Type=URI
+	//IDも、なし
+
+	//URI本体
+	pMsg->Data[pos++] = (uint8_t)HttpType;
+	hk_memcpy(pMsg->Data + pos, pUrl, len);
+
 	pMsg->Length = (uint16_t)(pos + len);
 
 	return true;

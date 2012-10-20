@@ -90,4 +90,9 @@ void* hk_memcpy(void* dst, const void* src, uint16_t len);
  */
 void* hk_memset(void* dst, uint8_t dat, uint16_t len);
 
+/**
+ * char文字数
+ */
+uint8_t hk_strlen(const char* pStr);
+
 #endif // HK_MISC_H

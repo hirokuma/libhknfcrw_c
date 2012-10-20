@@ -37,7 +37,7 @@
 #include "nfclog.h"
 
 //#define USE_DEBUG
-
+#define USE_DEBUG_PDU
 
 /*
  * definition
@@ -202,7 +202,9 @@ static void createPdu(uint8_t type);
 static void killConnection(void);
 static bool addSendData(const void* pBuf, uint8_t len);
 static bool connect(void);
-
+#ifdef USE_DEBUG_PDU
+static const char* string_pdu(uint8_t type);
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -675,6 +677,10 @@ static uint8_t analyzePdu(const uint8_t* pBuf, uint8_t len, uint8_t* pResPdu)
 		*pResPdu = PDU_NONE;
 		return SDU;
 	}
+#ifdef USE_DEBUG_PDU
+	LOGD("analyzePdu : %s\n", string_pdu(*pResPdu));
+#endif
+
 	// 5.6.6 Connection Termination(disconnecting phase)
 	uint8_t next;
 	if((m_LlcpStat == LSTAT_WAIT_DM) && (*pResPdu != PDU_DM)) {
@@ -883,6 +889,10 @@ static uint8_t analyzeI(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t 
 static uint8_t analyzeRr(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
 	LOGD("PDU_RR : N(R)=%d\n", *(pBuf + PDU_INFOPOS));
+
+	LOGD("-->TERM\n");
+	m_LlcpStat = LSTAT_TERM;
+
 	return 0;
 }
 
@@ -1006,6 +1016,10 @@ static uint8_t analyzeParamList(const uint8_t *pBuf)
 
 static void createPdu(uint8_t type)
 {
+#ifdef USE_DEBUG_PDU
+	LOGD("createPdu : %s\n", string_pdu(type));
+#endif
+
 	uint8_t ssap;
 	uint8_t dsap;
 	
@@ -1105,6 +1119,49 @@ static bool connect(void)
 	return b;
 }
 
+#ifdef USE_DEBUG_PDU
+static const char* string_pdu(uint8_t type)
+{
+	switch(type) {
+	case PDU_SYMM	:
+		return "PDU_SYMM";
+	case PDU_PAX	:	
+		return "PDU_PAX";
+	case PDU_AGF	:	
+		return "PDU_AGF";
+	case PDU_UI		:
+		return "PDU_UI";
+	case PDU_CONN	:
+		return "PDU_CONN";
+	case PDU_DISC	:
+		return "PDU_DISC";
+	case PDU_CC		:
+		return "PDU_CC";
+	case PDU_DM		:
+		return "PDU_DM";
+	case PDU_FRMR	:
+		return "PDU_FRMR";
+	case PDU_RESV1	:
+		return "PDU_RESV1";
+	case PDU_RESV2	:
+		return "PDU_RESV2";
+	case PDU_RESV3	:
+		return "PDU_RESV3";
+	case PDU_I		:
+		return "PDU_I";
+	case PDU_RR		:
+		return "PDU_RR";
+	case PDU_RNR	:	
+		return "PDU_RNR";
+	case PDU_RESV4	:
+		return "PDU_RESV4";
+	case PDU_NONE	:
+		return "PDU_NONE";
+	default:
+		return "unknown PDU";
+	}
+}
+#endif
 
 /////////////////////////////////////////////////////////////////////////
 
@@ -1369,6 +1426,7 @@ bool HkNfcLlcpT_Start(void (*pRecvCb)(const void* pBuf, uint8_t len))
 
 		hk_start_timer(m_LinkTimeout);
 	} else {
+		LOGE("-- fail\n");
 		HkNfcRw_SetLastError(HKNFCERR_LLCP_START);
 	}
 	

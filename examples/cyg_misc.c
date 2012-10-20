@@ -97,3 +97,8 @@ void* hk_memset(void* dst, uint8_t dat, uint16_t len)
 {
 	return memset(dst, dat, len);
 }
+
+uint8_t hk_strlen(const char* pStr)
+{
+	return strlen(pStr);
+}

@@ -47,5 +47,6 @@ typedef uint8_t HkNfcSnepMode;
 uint8_t HkNfcSnep_GetResult(void);
 bool HkNfcSnep_PutStart(HkNfcSnepMode Mode, const HkNfcNdefMsg* pMsg);
 bool HkNfcSnep_Poll(void);
+void HkNfcSnepStop(void);
 
 #endif /* HK_NFCSNEP_H */

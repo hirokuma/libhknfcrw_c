@@ -144,6 +144,18 @@ bool HkNfcSnep_Poll(void)
 }
 
 
+void HkNfcSnepStop(void)
+{
+	LOGD("%s\n", __PRETTY_FUNCTION__);
+
+	if(m_Mode == HKNFCSNEP_MD_INITIATOR) {
+		HkNfcDep_StopAsInitiator();
+	} else {
+	}
+	HkNfcDep_Close();
+	HkNfcRw_SetLastError(HKNFCERR_NONE);
+}
+
 //////////////////////////////////////////////////////////////////////////
 #ifdef HKNFCRW_USE_SNEP_INITIATOR
 static bool pollI(void)
