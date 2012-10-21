@@ -288,7 +288,7 @@ bool NfcPcd_RfConfiguration(uint8_t cmd, const uint8_t* pCommand, uint8_t Comman
 	uint16_t res_len;
 	bool ret = _sendCmd(s_NormalFrmBuf, 3 + CommandLen, s_ResponseBuf, &res_len, true);
 	if(!ret || (res_len != RESHEAD_LEN)) {
-		LOGE("rfConfiguration ret=%d\n", ret);
+		LOGE("rfConfiguration [cmd:0x%02x]ret=%d, ren=%d\n", cmd, ret, res_len);
 		HkNfcRw_SetLastError(HKNFCERR_PCD_CFG);
 		return false;
 	}
@@ -1207,6 +1207,13 @@ static bool _sendCmd(
 
 	if(hk_nfcrw_write(s_SendBuf, send_len) != send_len) {
 		LOGE("write error.\n");
+		hk_nfcrw_close();
+		hk_msleep(500);
+		bool op = hk_nfcrw_open();
+		if(!op) {
+			LOGE("reopen error.\n");
+			HkNfcRw_SetLastError(HKNFCERR_LOWLEVEL_OPEN);
+		}
 		return false;
 	}
 

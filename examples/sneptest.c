@@ -38,13 +38,13 @@ int nfc_test()
 	bool loop = true;
 	while(loop) {
 		//カード探索して・・・
-		type = HkNfcRw_Detect(false, false, true);
+		type = HkNfcRw_Detect(true, false, true);
 		//すぐにRFは止めて・・・
 		HkNfcRw_RfOff();
 
 		switch(type) {
 
-		// NFC-Aの場合、TPEだったらSNEP(text)
+		// NFC-Aの場合、TPEだったらSNEP
 		case HKNFCTYPE_A:
 			printf("[%d]NFC-A\n", count++);
 			{
@@ -94,7 +94,6 @@ int nfc_test()
 		} else {
 			HkNfcSnepStop();
 			hk_msleep(1000);
-			HkNfcRw_Reset();
 		}
 		printf("-----------------------\n");
 	}
@@ -121,10 +120,10 @@ static bool _snep(const char* pStr)
 	}
 
 	
-	/* Initiatorの場合、最後にPollingしたTechnologyでDEPする */
-#if 0
+#if 1
 
 # ifdef SNEP_INITIATOR
+	/* Initiatorの場合、最後にPollingしたTechnologyでDEPする */
 	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_INITIATOR, &msg);
 # else
 	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_TARGET, &msg);
@@ -132,7 +131,9 @@ static bool _snep(const char* pStr)
 
 #else
 
+//データ転送なし
 # ifdef SNEP_INITIATOR
+	/* Initiatorの場合、最後にPollingしたTechnologyでDEPする */
 	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_INITIATOR, 0);
 # else
 	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_TARGET, 0);
@@ -140,7 +141,7 @@ static bool _snep(const char* pStr)
 
 #endif
 	if(!b) {
-		printf("putstart fail : %02x\n", HkNfcRw_GetLastError());
+		printf("put start fail : %02x\n", HkNfcRw_GetLastError());
 		return false;
 	}
 	
@@ -149,7 +150,7 @@ static bool _snep(const char* pStr)
 	}
 	
 	if(HkNfcSnep_GetResult() != HKNFCSNEP_SUCCESS) {
-		printf("putresult fail : %02x\n", HkNfcRw_GetLastError());
+		printf("put result fail : %02x\n", HkNfcRw_GetLastError());
 		return false;
 	}
 

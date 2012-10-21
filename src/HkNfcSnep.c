@@ -174,6 +174,7 @@ static bool pollI(void)
 			break;
 		case HKNFCTYPE_F:
 			mode = HKNFCDEPMODE_ACT_424K;
+			//mode = HKNFCDEPMODE_PSV_424K;
 			break;
 		default:
 			/* こうはならないはず */

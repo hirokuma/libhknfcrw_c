@@ -615,6 +615,8 @@ void HkNfcDep_Close(void)
 {
 	LOGD("%s\n", __PRETTY_FUNCTION__);
 
+	HkNfcRw_Reset();
+
 	m_SendRecv = SR_RECEIVER;
 	m_LlcpStat = LSTAT_NONE;
 	m_DepMode = HKNFCDEPMODE_NONE;
@@ -1015,7 +1017,7 @@ static uint8_t analyzeParamList(const uint8_t *pBuf)
 static void createPdu(uint8_t type)
 {
 #ifdef USE_DEBUG_PDU
-	LOGD("createPdu : %s\n", string_pdu(type));
+	//LOGD("createPdu : %s\n", string_pdu(type));
 #endif
 
 	uint8_t ssap;
@@ -1053,11 +1055,11 @@ static void createPdu(uint8_t type)
  */
 static void killConnection(void)
 {
-	LOGD("---n");
+	LOGD("---\n");
 	LOGD("%s\n", __PRETTY_FUNCTION__);
 	HkNfcDep_Close();
 	NfcPcd_Reset();
-	LOGD("---n");
+	LOGD("---\n");
 }
 
 
@@ -1294,7 +1296,7 @@ bool HkNfcLlcpI_Poll(void)
 		case LSTAT_NOT_CONNECT:
 			//CONNECT前はSYMMを投げる
 			m_CommandLen = PDU_INFOPOS;
-			LOGD("*");
+			LOGD("send SYMM\n");
 			createPdu(PDU_SYMM);
 			break;
 		
@@ -1325,7 +1327,7 @@ bool HkNfcLlcpI_Poll(void)
 				} else {
 					//それ以外
 					m_CommandLen = PDU_INFOPOS;
-					LOGD("*");
+					//LOGD("send SYMM\n");
 					createPdu(PDU_SYMM);
 				}
 			}
@@ -1334,34 +1336,40 @@ bool HkNfcLlcpI_Poll(void)
 		case LSTAT_TERM:
 			//切断シーケンス
 			m_CommandLen = PDU_INFOPOS;
+			//LOGD("send DISC\n");
 			createPdu(PDU_DISC);
-			LOGD("send DISC\n");
 			break;
 		
 		case LSTAT_DM:
 			//切断
 			pCommandBuf[PDU_INFOPOS] = pCommandBuf[0];
 			m_CommandLen = PDU_INFOPOS + 1;
+			//LOGD("send DM\n");
 			createPdu(PDU_DM);
-			LOGD("send DM\n");
 			break;
 		}
 		if(m_CommandLen == 0) {
 			//SYMMでしのぐ
 			m_CommandLen = PDU_INFOPOS;
+			//LOGD("send SYMM\n");
 			createPdu(PDU_SYMM);
-			LOGD("*");
 		}
 		
 		uint8_t len;
 		hk_start_timer(m_LinkTimeout);
+		LOGD("send %s\n", string_pdu(m_LastSentPdu));
 		bool b = HkNfcDep_SendAsInitiator(pCommandBuf, m_CommandLen, pResponseBuf, &len);
-		if(m_LlcpStat == LSTAT_DM) {
+		if(!b) {
+			LOGE("error\n");
+			//もうだめ
+			killConnection();
+			HkNfcRw_SetLastError(HKNFCERR_LLCP_ERR);
+		} else if(m_LlcpStat == LSTAT_DM) {
 			//DM送信後は強制終了する
 			LOGD("DM sent\n");
 			HkNfcDep_StopAsInitiator();
 			killConnection();
-		} else if(b) {
+		} else {
 			if(hk_is_timeout()) {
 				//相手から通信が返ってこない
 				LOGE("Link timeout\n");
@@ -1371,6 +1379,7 @@ bool HkNfcLlcpI_Poll(void)
 				m_SSAP = SAP_MNG;
 				HkNfcRw_SetLastError(HKNFCERR_LLCP_TIMEOUT);
 			} else {
+				LOGD("?\n");
 				if((m_LlcpStat == LSTAT_CONNECTING) && (m_LastSentPdu == PDU_CC)) {
 					m_LlcpStat = LSTAT_NORMAL;
 				}
@@ -1382,11 +1391,6 @@ bool HkNfcLlcpI_Poll(void)
 				uint8_t type;
 				uint8_t pdu = analyzePdu(pResponseBuf, len, &type);
 			}
-		} else {
-			LOGE("error\n");
-			//もうだめ
-			killConnection();
-			HkNfcRw_SetLastError(HKNFCERR_LLCP_ERR);
 		}
 	}
 	
@@ -1527,7 +1531,12 @@ bool HkNfcLlcpT_Poll(void)
 		//PDU受信側
 		uint8_t len;
 		bool b = HkNfcDep_RecvAsTarget(pResponseBuf, &len);
-		if(hk_is_timeout()) {
+		if(!b) {
+			//もうだめだろう
+			LOGE("recv error\n");
+			killConnection();
+			HkNfcRw_SetLastError(HKNFCERR_LLCP_ERR);
+		} else if(hk_is_timeout()) {
 			//相手から通信が返ってこない
 			LOGE("Link timeout\n");
 			m_SendRecv = SR_SENDER;
@@ -1535,16 +1544,11 @@ bool HkNfcLlcpT_Poll(void)
 			m_DSAP = SAP_MNG;
 			m_SSAP = SAP_MNG;
 			HkNfcRw_SetLastError(HKNFCERR_LLCP_TIMEOUT);
-		} else if(b) {
+		} else {
 			uint8_t type;
 			uint8_t pdu = analyzePdu(pResponseBuf, len, &type);
 			//PDU送信側になる
 			m_SendRecv = SR_SENDER;
-		} else {
-			//もうだめだろう
-			LOGE("recv error\n");
-			killConnection();
-			HkNfcRw_SetLastError(HKNFCERR_LLCP_ERR);
 		}
 	} else {
 		//PDU送信側
@@ -1557,9 +1561,8 @@ bool HkNfcLlcpT_Poll(void)
 		case LSTAT_NOT_CONNECT:
 			//CONNECT前はSYMMを投げる
 			m_CommandLen = PDU_INFOPOS;
-			createPdu(PDU_SYMM);
 			//LOGD("send SYMM\n");
-			LOGD("*");
+			createPdu(PDU_SYMM);
 			break;
 		
 		case LSTAT_CONNECTING:
@@ -1589,7 +1592,7 @@ bool HkNfcLlcpT_Poll(void)
 				} else {
 					//それ以外
 					m_CommandLen = PDU_INFOPOS;
-					LOGD("*");
+					LOGD("send SYMM\n");
 					createPdu(PDU_SYMM);
 				}
 			}
@@ -1597,14 +1600,14 @@ bool HkNfcLlcpT_Poll(void)
 
 		case LSTAT_TERM:
 			//切断シーケンス
-			LOGD("send DISC\n");
+			//LOGD("send DISC\n");
 			m_CommandLen = PDU_INFOPOS;
 			createPdu(PDU_DISC);
 			break;
 		
 		case LSTAT_DM:
 			//切断
-			LOGD("send DM\n");
+			//LOGD("send DM\n");
 			pCommandBuf[PDU_INFOPOS] = pCommandBuf[0];
 			m_CommandLen = PDU_INFOPOS + 1;
 			createPdu(PDU_DM);
@@ -1613,8 +1616,10 @@ bool HkNfcLlcpT_Poll(void)
 		if(m_CommandLen == 0) {
 			//SYMMでしのぐ
 			m_CommandLen = PDU_INFOPOS;
+			//LOGD("send SYMM\n");
 			createPdu(PDU_SYMM);
 		}
+		LOGD("send %s\n", string_pdu(m_LastSentPdu));
 		bool b = HkNfcDep_RespAsTarget(pCommandBuf, m_CommandLen);
 		if(m_LlcpStat == LSTAT_DM) {
 			//DM送信後は強制終了する

@@ -69,7 +69,7 @@ bool HkNfcA_Polling(void)
 	if (!ret
 	  || (responseLen < 12)
 	  || (responseLen <  7 + *(pData + 7))) {
-		LOGE("pollingA fail: ret=%d/len=%d\n", ret, responseLen);
+		//LOGE("pollingA fail: ret=%d/len=%d\n", ret, responseLen);
 		return false;
 	}
 

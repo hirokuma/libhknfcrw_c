@@ -110,7 +110,11 @@ void HkNfcRw_Release(void)
  */
 void HkNfcRw_RfOff(void)
 {
-	NfcPcd_RfOff();
+//	LOGD("\n");
+
+	if(!NfcPcd_RfOff()) {
+		NfcPcd_Reset();
+	}
 }
 
 
@@ -119,7 +123,13 @@ void HkNfcRw_RfOff(void)
  */
 void HkNfcRw_Reset(void)
 {
-	NfcPcd_Reset();
+	LOGD("\n");
+
+	if(!NfcPcd_Reset()) {
+		//なんか致命的
+		HkNfcRw_Close();
+		HkNfcRw_Open();
+	}
 }
 
 
