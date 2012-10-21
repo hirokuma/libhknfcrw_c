@@ -38,6 +38,7 @@
 
 //#define USE_DEBUG
 #define USE_DEBUG_PDU
+#define USE_DEBUG_PDUI
 
 /*
  * definition
@@ -50,7 +51,7 @@
 #define PL_SN			((uint8_t)0x06)
 #define PL_OPT			((uint8_t)0x07)
 
-// VERSION
+// VERSION(1.0)
 #define VER_MAJOR		((uint8_t)0x01)
 #define VER_MINOR		((uint8_t)0x00)
 
@@ -678,7 +679,7 @@ static uint8_t analyzePdu(const uint8_t* pBuf, uint8_t len, uint8_t* pResPdu)
 		return SDU;
 	}
 #ifdef USE_DEBUG_PDU
-	LOGD("analyzePdu : %s\n", string_pdu(*pResPdu));
+	LOGD("analyzePdu : %s[len=%d]\n", string_pdu(*pResPdu), len);
 #endif
 
 	// 5.6.6 Connection Termination(disconnecting phase)
@@ -690,7 +691,7 @@ static uint8_t analyzePdu(const uint8_t* pBuf, uint8_t len, uint8_t* pResPdu)
 	} else {
 		uint8_t dsap = *pBuf >> 2;
 		uint8_t ssap = *(pBuf + 1) & 0x3f;
-		LOGD("[D:%d/S:%d]", dsap, ssap);
+		LOGD("[D:0x%02x/S:0x%02x]\n", dsap, ssap);
 		next = (*sAnalyzePdu[*pResPdu])(pBuf, len, dsap, ssap);
 	}
 	return next;
@@ -742,8 +743,22 @@ static uint8_t analyzeUi(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t
 
 static uint8_t analyzeConn(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
-	LOGD("PDU_CONN");
+	LOGD("PDU_CONN\n");
 	m_DSAP = *pBuf >> 2;
+
+	pBuf += PDU_INFOPOS;
+	len -= PDU_INFOPOS;
+	while(len) {
+		//ここでPDU解析
+		uint8_t next = analyzeParamList(pBuf);
+		if(len > next) {
+			len -= next;
+			pBuf += next;
+		} else {
+			break;
+		}
+	}
+
 	if((dsap == SAP_SNEP) && (ssap == SAP_SNEP)) {
 		LOGD("... accept\n");
 		m_DSAP = dsap;
@@ -752,19 +767,6 @@ static uint8_t analyzeConn(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8
 		m_ValueR = 0;
 		m_ValueSA = 0;
 		m_ValueRA = 0;
-
-		pBuf += PDU_INFOPOS;
-		len -= PDU_INFOPOS;
-		while(len) {
-			//ここでPDU解析
-			uint8_t next = analyzeParamList(pBuf);
-			if(len > next) {
-				len -= next;
-				pBuf += next;
-			} else {
-				break;
-			}
-		}
 		
 		//CC返信
 		createPdu(PDU_CC);
@@ -774,7 +776,7 @@ static uint8_t analyzeConn(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8
 		
 		return SDU;
 	} else {
-		LOGD("... unmatch SAP(D:%d / S:%d)\n", dsap, ssap);
+		LOGD("... unmatch SAP(D:0x%02x / S:0x%02x)\n", dsap, ssap);
 		m_DSAP = SAP_MNG;
 		m_SSAP = SAP_MNG;
 		m_LlcpStat = LSTAT_DM;
@@ -840,7 +842,7 @@ static uint8_t analyzeDm(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t
 	LOGD("PDU_DM : %d\n", *(pBuf + PDU_INFOPOS));
 	if(m_LlcpStat == LSTAT_WAIT_DM) {
 		//切断シーケンスの終わり
-		LOGD("LSTAT_WAIT_DM");
+		LOGD("LSTAT_WAIT_DM\n");
 	}
 	LOGD("==>LSTAT_NONE\n");
 	m_LlcpStat = LSTAT_NONE;
@@ -872,12 +874,12 @@ static uint8_t analyzeI(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t 
 		
 		pBuf += PDU_INFOPOS + 1;
 		len -= PDU_INFOPOS + 1;
-#ifdef USE_DEBUG
+#ifdef USE_DEBUG_PDUI
 		int i;
 		for(i=0; i<len; i++) {
-			LOGD("[I]%02x\n", *(pBuf + i));
+			LOGD("  [I]%02x\n", *(pBuf + i));
 		}
-#endif	//USE_DEBUG
+#endif	//USE_DEBUG_PDUI
 		m_PrevRecvI = PRI_RECV;
 		(*m_pRecvCb)(pBuf, len);
 	} else {
@@ -889,10 +891,6 @@ static uint8_t analyzeI(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t 
 static uint8_t analyzeRr(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
 	LOGD("PDU_RR : N(R)=%d\n", *(pBuf + PDU_INFOPOS));
-
-	LOGD("-->TERM\n");
-	m_LlcpStat = LSTAT_TERM;
-
 	return 0;
 }
 
@@ -1055,11 +1053,11 @@ static void createPdu(uint8_t type)
  */
 static void killConnection(void)
 {
-	LOGD("--------------------\n");
+	LOGD("---n");
 	LOGD("%s\n", __PRETTY_FUNCTION__);
 	HkNfcDep_Close();
 	NfcPcd_Reset();
-	LOGD("--------------------\n");
+	LOGD("---n");
 }
 
 

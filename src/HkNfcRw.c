@@ -59,8 +59,6 @@ static uint8_t		m_LastError;	///< 最後に発生したエラー番号
  */
 bool HkNfcRw_Open(void)
 {
-	LOGD("%s\n", __PRETTY_FUNCTION__);
-
 	bool ret = NfcPcd_PortOpen();
 	if(!ret) {
 		return false;
@@ -168,7 +166,7 @@ HkNfcType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF)
 			return m_Type;
 		}
 	}
-	LOGD("Detect fail\n");
+//	LOGD("Detect fail\n");
 
 	return HKNFCTYPE_NONE;
 }

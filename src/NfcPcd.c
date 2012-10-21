@@ -38,6 +38,7 @@
 #define LOG_TAG "NfcPcd"
 #include "nfclog.h"
 //#define ENABLE_FRAME_LOG
+#define ENABLE_LOG_DETAIL
 
 /*
  * definition
@@ -65,6 +66,7 @@ static bool _recvResp(uint8_t* pResponse, uint16_t* pResponseLen, uint8_t CmdCod
 static void _sendAck(void);
 static uint8_t _calcDcs(const uint8_t* data, uint16_t len);
 
+
 /*
  * variable
  */
@@ -80,8 +82,6 @@ static uint8_t s_SendBuf[RWBUF_MAX];
 static uint8_t* s_NormalFrmBuf = &(s_SendBuf[POS_NORMALFRM_DATA]);
 /// Extendedフレームのデータ部
 static uint8_t* s_ExtendFrmBuf = &(s_SendBuf[POS_EXTENDFRM_DATA]);
-
-
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -727,7 +727,7 @@ bool NfcPcd_InDataExchange(
 	uint16_t res_len;
 	bool ret = _sendCmd(s_NormalFrmBuf, 3 + CommandLen, s_ResponseBuf, &res_len, true);
 	if(!ret || (res_len < RESHEAD_LEN+1) || (s_ResponseBuf[POS_RESDATA] != 0x00)) {
-		LOGE("inDataExchange ret=%d / len=%d / code=%02x\n", ret, res_len, s_ResponseBuf[POS_RESDATA]);
+		LOGE("ret=%d / len=%d / code=%02x\n", ret, res_len, s_ResponseBuf[POS_RESDATA]);
 		HkNfcRw_SetLastError(HKNFCERR_PCD_INDTEX);
 		return false;
 	}
@@ -949,7 +949,7 @@ bool NfcPcd_TgInitAsTarget(TargetParam* pParam)
 	uint16_t res_len;
 	bool ret = _sendCmd(s_NormalFrmBuf, len, s_ResponseBuf, &res_len, true);
 	if(!ret || (res_len < RESHEAD_LEN+1)) {
-		LOGE("TgInitAsTarget ret=%d/len=%d\n", ret, res_len);
+		LOGE("fail : TgInitAsTarget ret=%d/len=%d\n", ret, res_len);
 		HkNfcRw_SetLastError(HKNFCERR_PCD_TGINIT);
 		return false;
 	}
@@ -1008,7 +1008,12 @@ bool NfcPcd_TgGetData(uint8_t* pCommand, uint8_t* pCommandLen)
 	uint16_t res_len;
 	bool ret = _sendCmd(s_NormalFrmBuf, 2, s_ResponseBuf, &res_len, true);
 	if(!ret || (res_len < RESHEAD_LEN+1) || (s_ResponseBuf[POS_RESDATA] != 0x00)) {
-		LOGE("tgGetData ret=%d / len=%d / code=%02x\n", ret, res_len, s_ResponseBuf[POS_RESDATA]);
+		LOGE("tgGetData ret=%d / len=%d / status=0x%02x\n", ret, res_len, s_ResponseBuf[POS_RESDATA]);
+#ifdef ENABLE_LOG_DETAIL
+		if(s_ResponseBuf[POS_RESDATA] == 0x29) {
+			LOGI("initiator released\n");
+		}
+#endif //ENABLE_LOG_DETAIL
 		HkNfcRw_SetLastError(HKNFCERR_PCD_TGGETDT);
 		return false;
 	}

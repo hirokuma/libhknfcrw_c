@@ -9,11 +9,13 @@
 #include "HkNfcNdef.h"
 #include "HkNfcSnep.h"
 
+#define SNEP_INITIATOR
+
 const char* STR_NFCA = 			"NFC-A";
 const char* STR_NFCB = 			"NFC-B";
 const char* STR_NFCF = 			"NFC-F";
 
-static void _snep(const char* pStr);
+static bool _snep(const char* pStr);
 
 int nfc_test()
 {
@@ -30,10 +32,11 @@ int nfc_test()
 		return -1;
 	}
 
-#if 0
+#ifdef SNEP_INITIATOR
 	printf("Card Detect & read\n");
 
-	while(1) {
+	bool loop = true;
+	while(loop) {
 		//カード探索して・・・
 		type = HkNfcRw_Detect(false, false, true);
 		//すぐにRFは止めて・・・
@@ -47,7 +50,10 @@ int nfc_test()
 			{
 				HkNfcASelRes selres = HkNfcA_GetSelRes();
 				if(HKNFCA_IS_SELRES_TPE(selres)) {
-					_snep(STR_NFCA);
+					if(_snep(STR_NFCA)) {
+						//success
+						loop = false;
+					}
 				}
 			}
 			break;
@@ -64,7 +70,10 @@ int nfc_test()
 				uint8_t idm[NFCID2_LEN];
 				if(HkNfcRw_GetNfcId(idm) != 0) {
 					if(HKNFCF_IS_NFCID_TPE(idm)) {
-						_snep(STR_NFCF);
+						if(_snep(STR_NFCF)) {
+							//success
+							loop = false;
+						}
 					}
 				}
 			}
@@ -76,11 +85,17 @@ int nfc_test()
 		hk_msleep(1000);
 	}
 #else
+	printf("wait initiator\n");
+
 	while(1) {
-		_snep(STR_NFCF);
-		HkNfcSnepStop();
-		hk_msleep(1000);
-		HkNfcRw_Reset();
+		if(_snep(STR_NFCF)) {
+			hk_msleep(3000);
+			break;
+		} else {
+			HkNfcSnepStop();
+			hk_msleep(1000);
+			HkNfcRw_Reset();
+		}
 		printf("-----------------------\n");
 	}
 #endif
@@ -93,27 +108,40 @@ int nfc_test()
 }
 
 
-static void _snep(const char* pStr)
+static bool _snep(const char* pStr)
 {
 	HkNfcNdefMsg msg;
 	bool b;
 
-#if 1
 //	b = HkNfcNdef_CreateText(&msg, pStr, _strlen(pStr), LANGCODE_EN);
 	b = HkNfcNdef_CreateUrl(&msg, HKNFCNDEF_URI_HTTP, "google.com");
 	if(!b) {
 		printf("ndef fail\n");
-		return;
+		return false;
 	}
-#endif
 
 	
 	/* Initiatorの場合、最後にPollingしたTechnologyでDEPする */
-//	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_INITIATOR, &msg);
+#if 0
+
+# ifdef SNEP_INITIATOR
+	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_INITIATOR, &msg);
+# else
 	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_TARGET, &msg);
+# endif
+
+#else
+
+# ifdef SNEP_INITIATOR
+	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_INITIATOR, 0);
+# else
+	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_TARGET, 0);
+# endif
+
+#endif
 	if(!b) {
 		printf("putstart fail : %02x\n", HkNfcRw_GetLastError());
-		return;
+		return false;
 	}
 	
 	while(HkNfcSnep_Poll()) {
@@ -122,10 +150,11 @@ static void _snep(const char* pStr)
 	
 	if(HkNfcSnep_GetResult() != HKNFCSNEP_SUCCESS) {
 		printf("putresult fail : %02x\n", HkNfcRw_GetLastError());
-		return;
+		return false;
 	}
 
 	printf("success\n");
-	hk_msleep(3000);
+	
+	return true;
 }
 

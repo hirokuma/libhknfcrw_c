@@ -5,11 +5,11 @@
 #include "hk_devaccess.h"
 
 // デバッグ設定
-//#define HKNFCRW_ENABLE_DEBUG
+#define HKNFCRW_ENABLE_DEBUG
 
 #ifdef HKNFCRW_ENABLE_DEBUG
-#define DBG_WRITEDATA
-#define DBG_READDATA
+//#define DBG_WRITEDATA
+//#define DBG_READDATA
 #include <stdio.h>
 #define LOGI	printf
 #define LOGE	printf
@@ -50,20 +50,23 @@ static bool usb_open()
 
 	if(m_pContext) {
 		// open済み
-		printf("already opened\n");
+		//printf("already opened\n");
 		return true;
 	}
 
 	int r;
 
+	//printf("--init...\n");
 	r = libusb_init(&m_pContext);
 	if (r < 0) {
 		LOGE("cannot init\n");
 		return false;
 	}
+	//printf("  ==> done!\n");
+
 //	libusb_set_debug(NULL, 3);
 
-#if 1
+#if 0
 	libusb_device **devs;
 	ssize_t cnt = libusb_get_device_list(m_pContext, &devs);
 	if (cnt < 0) {
@@ -102,12 +105,17 @@ static bool usb_open()
 	libusb_free_device_list(devs, 1);
 
 #else
+	//printf("--open...\n");
 	m_pHandle = libusb_open_device_with_vid_pid(NULL, VID, PID);
 	if(m_pHandle == NULL) {
 		LOGE("cannot open\n");
 		close();
 		return false;
 	}
+	//printf("  ==>done!\n");
+	
+	libusb_device *dev;
+	dev = libusb_get_device(m_pHandle);
 #endif
 
 	struct libusb_config_descriptor* pConfig;
@@ -118,6 +126,7 @@ static bool usb_open()
 		return false;
 	}
 	
+	//printf("--find\n");
 	int inf;
 	int alt;
 	int desc;
@@ -128,11 +137,11 @@ static bool usb_open()
 			for(desc = 0; desc < idesc->bNumEndpoints; desc++) {
 				const struct libusb_endpoint_descriptor* EndPnt = &(idesc->endpoint[desc]);
 				if(EndPnt->bEndpointAddress & LIBUSB_ENDPOINT_IN) {
-					//printf("[IN]type : %x / addr : %x\n", EndPnt.bDescriptorType, EndPnt.bEndpointAddress);
+					//printf("find IN\n");
 					m_EndPntIn = EndPnt->bEndpointAddress;
 				}
 				else {
-					//printf("[OUT]type : %x / addr : %x\n", EndPnt.bDescriptorType, EndPnt.bEndpointAddress);
+					//printf("find OUT\n");
 					m_EndPntOut = EndPnt->bEndpointAddress;
 				}
 			}

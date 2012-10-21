@@ -29,16 +29,20 @@
 #define HKNFCRW_ENABLE_DEBUG
 
 #ifdef HKNFCRW_ENABLE_DEBUG
-#include <stdio.h>
-#define LOGI	printf
-#define LOGE	printf
-#define LOGD	printf
-
+# include <stdio.h>
+# ifdef __GNUC__
+#  define LOGI(fmt, ...)	printf("I/[%s() %d] " fmt, __FUNCTION__, __LINE__, ## __VA_ARGS__)
+#  define LOGD(fmt, ...)	printf("D/[%s() %d] " fmt, __FUNCTION__, __LINE__, ## __VA_ARGS__)
+#  define LOGE(fmt, ...)	printf("E/[%s() %d] " fmt, __FUNCTION__, __LINE__, ## __VA_ARGS__)
+# else
+#  define LOGI				printf
+#  define LOGD				printf
+#  define LOGE				printf
+# endif
 #else
-#define LOGI(...)
-#define LOGE(...)
-#define LOGD(...)
-
+# define LOGI(...)
+# define LOGD(...)
+# define LOGE(...)
 #endif	//HKNFCRW_ENABLE_DEBUG
 
 #endif /* NFCLOG_H */

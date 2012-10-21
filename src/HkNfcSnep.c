@@ -98,7 +98,7 @@ uint8_t HkNfcSnep_GetResult(void)
  */
 bool HkNfcSnep_PutStart(HkNfcSnepMode Mode, const HkNfcNdefMsg* pMsg)
 {
-	if((m_pMessage != 0) || (pMsg == 0)) {
+	if(m_pMessage != 0) {
 		return false;
 	}
 	m_Status = ST_START_PUT;
@@ -183,7 +183,7 @@ static bool pollI(void)
 			break;
 		} 
 		b = b && HkNfcLlcpI_Start(mode, recvCbI);
-		if(b) {
+		if(b && m_pMessage) {
 			uint8_t snep_head[6];
 			snep_head[0] = 0x10;
 			snep_head[1] = 0x02;	//PUT
@@ -195,8 +195,13 @@ static bool pollI(void)
 			b = b && HkNfcLlcpI_AddSendData(m_pMessage->Data, m_pMessage->Length);
 		}
 		if(b) {
-			LOGD("==>pollI : ST_START_PUT==>ST_PUT\n");
-			m_Status = ST_PUT;
+			if(m_pMessage) {
+				LOGD("==>pollI : ST_START_PUT==>ST_PUT\n");
+				m_Status = ST_PUT;
+			} else {
+				LOGD("==>pollI[test] : ST_START_PUT==>ST_PUT_RESPONSE\n");
+				m_Status = ST_PUT_RESPONSE;
+			}
 		} else {
 			LOGD("==>pollI : ST_START_PUT==>abort\n");
 			m_Status = ST_ABORT;
@@ -265,7 +270,7 @@ static bool pollT(void)
 	switch(m_Status) {
 	case ST_START_PUT:
 		b = HkNfcLlcpT_Start(recvCbT);
-		if(b) {
+		if(b && m_pMessage) {
 			uint8_t snep_head[6];
 			snep_head[0] = 0x10;
 			snep_head[1] = 0x02;	//PUT
@@ -277,7 +282,13 @@ static bool pollT(void)
 			b = b && HkNfcLlcpT_AddSendData(m_pMessage->Data, m_pMessage->Length);
 		}
 		if(b) {
-			m_Status = ST_PUT;
+			if(m_pMessage) {
+				LOGD("==>pollT : ST_START_PUT==>ST_PUT\n");
+				m_Status = ST_PUT;
+			} else {
+				LOGD("==>pollT[test] : ST_START_PUT==>ST_PUT_RESPONSE\n");
+				m_Status = ST_PUT_RESPONSE;
+			}
 		} else {
 			LOGD("==>pollT : ST_START_PUT==>abort\n");
 			m_Status = ST_ABORT;

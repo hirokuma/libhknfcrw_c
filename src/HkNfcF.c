@@ -117,7 +117,7 @@ bool HkNfcF_Polling(uint16_t systemCode)
 				&pData, &responseLen);
 	if (!ret
 	  || (hk_memcmp(&pData[3], INLISTPASSIVETARGET_RES, sizeof(INLISTPASSIVETARGET_RES)) != 0)) {
-		LOGE("pollingF fail(424Kbps): ret=%d/len=%d\n", ret, responseLen);
+//		LOGE("pollingF fail(424Kbps): ret=%d/len=%d\n", ret, responseLen);
 
 		//212Kbps
 		pCmd[0] = 0x01;
@@ -126,7 +126,7 @@ bool HkNfcF_Polling(uint16_t systemCode)
 				&pData, &responseLen);
 		if (!ret
 		  || (hk_memcmp(&pData[3], INLISTPASSIVETARGET_RES, sizeof(INLISTPASSIVETARGET_RES)) != 0)) {
-			LOGE("pollingF fail(212Kbps): ret=%d/len=%d\n", ret, responseLen);
+//			LOGE("pollingF fail(212Kbps): ret=%d/len=%d\n", ret, responseLen);
 			m_SystemCode = kSC_BROADCAST;
 			return false;
 		}
