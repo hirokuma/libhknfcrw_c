@@ -6,6 +6,7 @@ AR       = ar
 
 USE_SNEP_TARGET = yes
 USE_SNEP_INITIATOR  = yes
+USE_SNEP_SERVER = yes
 USE_LASTERR = yes
 
 TARGET = libhknfcrw_cyg.a
@@ -23,14 +24,6 @@ SRCS = \
 	NfcPcd.c
 
 #####################################################
-#SNEP Target
-ifeq ($(USE_SNEP_TARGET),yes)
-SRCS += \
-	HkNfcLlcp.c \
-	HkNfcSnep.c
-CFLAGS += -DHKNFCRW_USE_SNEP -DHKNFCRW_USE_SNEP_TARGET
-endif
-
 #SNEP Initiator
 ifeq ($(USE_SNEP_INITIATOR),yes)
 
@@ -41,9 +34,23 @@ SRCS += \
 CFLAGS += -DHKNFCRW_USE_SNEP
 endif
 
+#SNEP Target
+ifeq ($(USE_SNEP_TARGET),yes)
+SRCS += \
+	HkNfcLlcp.c \
+	HkNfcSnep.c
+CFLAGS += -DHKNFCRW_USE_SNEP -DHKNFCRW_USE_SNEP_TARGET
+endif
+
 CFLAGS += -DHKNFCRW_USE_SNEP_INITIATOR
 endif
 
+#SNEP Server
+ifeq ($(USE_SNEP_SERVER),yes)
+CFLAGS += -DHKNFCRW_USE_SNEP_SERVER
+endif
+
+#debug
 ifeq ($(USE_LASTERR),yes)
 CFLAGS += -DHKNFCRW_USE_LASTERR
 endif

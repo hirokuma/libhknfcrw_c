@@ -94,18 +94,6 @@ void HkNfcRw_Close(void)
 
 
 /**
- * 選択しているカードを内部的に解放する。
- *
- * @attention	RLS_REQ/RLS_RESとは関係ない
- */
-void HkNfcRw_Release(void)
-{
-	NfcPcd_ClrNfcId();
-	m_Type = HKNFCTYPE_NONE;
-}
-
-
-/**
  * 搬送波停止。
  */
 void HkNfcRw_RfOff(void)
@@ -155,30 +143,35 @@ HkNfcType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF)
 		if(ret) {
 			LOGD("PollingF\n");
 			m_Type = HKNFCTYPE_F;
-			return m_Type;
 		}
-	}
-
-	if(bNfcA) {
+	} else if(bNfcA) {
         bool ret = HkNfcA_Polling();
 		if(ret) {
 			LOGD("PollingA\n");
 			m_Type = HKNFCTYPE_A;
-			return m_Type;
 		}
-	}
-
-	if(bNfcB) {
+	} else if(bNfcB) {
         bool ret = HkNfcB_Polling();
 		if(ret) {
 			LOGD("PollingB\n");
 			m_Type = HKNFCTYPE_B;
-			return m_Type;
 		}
 	}
 //	LOGD("Detect fail\n");
 
-	return HKNFCTYPE_NONE;
+	return m_Type;
+}
+
+
+/**
+ * 選択しているカードを内部的に解放する。
+ *
+ * @attention	RLS_REQ/RLS_RESとは関係ない
+ */
+void HkNfcRw_Release(void)
+{
+	NfcPcd_ClrNfcId();
+	m_Type = HKNFCTYPE_NONE;
 }
 
 

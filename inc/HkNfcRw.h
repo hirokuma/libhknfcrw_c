@@ -46,15 +46,6 @@ typedef uint8_t HkNfcType;
 #define HKNFCTYPE_F		((HkNfcType)3)		///< NFC-F
 
 
-/// 選択解除
-void HkNfcRw_Release(void);
-#if 0	//ここはNDEF対応してからじゃないと意味がなさそうだな
-/// データ読み込み
-virtual bool HkNfcRw_Read(uint8_t* buf, uint8_t blockNo=0x00) { return false; }
-/// データ書き込み
-virtual bool HkNfcRw_Write(const uint8_t* buf, uint8_t blockNo=0x00) { return false; }
-#endif
-
 /// オープン
 bool HkNfcRw_Open(void);
 /// クローズ
@@ -68,6 +59,8 @@ void HkNfcRw_Reset(void);
 
 /// ターゲットの探索
 HkNfcType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF);
+/// 選択解除
+void HkNfcRw_Release(void);
 
 /// NFCID取得
 uint8_t HkNfcRw_GetNfcId(uint8_t* pBuf);
@@ -79,5 +72,12 @@ HkNfcType HkNfcRw_GetType(void);
 /// 最後に発生したエラー
 uint8_t HkNfcRw_GetLastError(void);
 #endif	//HKNFCRW_USE_LASTERR
+
+#if 0	//ここはNDEF対応してからじゃないと意味がなさそうだな
+/// データ読み込み
+virtual bool HkNfcRw_Read(uint8_t* buf, uint8_t blockNo=0x00) { return false; }
+/// データ書き込み
+virtual bool HkNfcRw_Write(const uint8_t* buf, uint8_t blockNo=0x00) { return false; }
+#endif
 
 #endif // HKNFCRW_H

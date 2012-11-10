@@ -38,7 +38,7 @@
  */
 typedef struct HkNfcNdefMsg {
 	uint8_t		Data[256];		///< メッセージ本体
-	uint16_t	Length;			///< Data[]の有効データ長
+	uint8_t		Length;			///< Data[]の有効データ長
 } HkNfcNdefMsg;
 
 

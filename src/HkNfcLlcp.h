@@ -32,18 +32,58 @@
 
 #include <stdint.h>
 #include <stdbool.h>
-#include "HkNfcDepMode.h"
 
-bool HkNfcLlcpI_Start(HkNfcDepMode mode, void (*pRecvCb)(const void* pBuf, uint8_t len));
-bool HkNfcLlcpI_StopRequest(void);
-bool HkNfcLlcpI_AddSendData(const void* pBuf, uint8_t len);
-bool HkNfcLlcpI_SendRequest(void);
-bool HkNfcLlcpI_Poll(void);
 
-bool HkNfcLlcpT_Start(void (*pRecvCb)(const void* pBuf, uint8_t len));
-bool HkNfcLlcpT_StopRequest(void);
-bool HkNfcLlcpT_AddSendData(const void* pBuf, uint8_t len);
-bool HkNfcLlcpT_SendRequest(void);
-bool HkNfcLlcpT_Poll(void);
+/**
+ * @typedef	HkNfcLlcpMode
+ * @brief	LLCP動作モード
+ */
+typedef uint8_t HkNfcLlcpMode;
+
+/* DEPでの通信モード */
+/// @def 	HKNFCLLCPMODE_NONE
+/// @brief	DEP開始前(取得のみ)
+#define HKNFCLLCPMODE_NONE		((HkNfcLlcpMode)0x00)
+
+/// @def 	HKNFCLLCPMODE_ACT_106K
+/// @brief	106kbps Active
+#define HKNFCLLCPMODE_ACT_106K	((HkNfcLlcpMode)0x0c)
+
+/// @def 	HKNFCLLCPMODE_PSV_106K
+/// @brief	106kbps Passive
+#define HKNFCLLCPMODE_PSV_106K	((HkNfcLlcpMode)0x04)
+
+/// @def 	HKNFCLLCPMODE_ACT_212K
+/// @brief	212kbps Active
+#define HKNFCLLCPMODE_ACT_212K	((HkNfcLlcpMode)0x0a)
+
+/// @def 	HKNFCLLCPMODE_PSV_212K
+/// @brief	212kbps Passive
+#define HKNFCLLCPMODE_PSV_212K	((HkNfcLlcpMode)0x02)
+
+/// @def 	HKNFCLLCPMODE_ACT_424K
+/// @brief	424kbps Active
+#define HKNFCLLCPMODE_ACT_424K	((HkNfcLlcpMode)0x09)
+
+/// @def 	HKNFCLLCPMODE_PSV_424K
+/// @brief	424kbps Passive
+#define HKNFCLLCPMODE_PSV_424K	((HkNfcLlcpMode)0x01)
+
+
+
+#ifdef HKNFCRW_USE_SNEP_INITIATOR
+bool HkNfcLlcp_StartAsIn(HkNfcLlcpMode mode, void (*pRecvCb)(const void* pBuf, uint8_t len));
+bool HkNfcLlcp_PollAsIn(void);
+#endif	//HKNFCRW_USE_SNEP_INITIATOR
+
+#ifdef HKNFCRW_USE_SNEP_TARGET
+bool HkNfcLlcp_StartAsTg(void (*pRecvCb)(const void* pBuf, uint8_t len));
+bool HkNfcLlcp_PollAsTg(void);
+#endif	//HKNFCRW_USE_SNEP_TARGET
+
+bool HkNfcLlcp_AddSendData(const void* pBuf, uint8_t len);
+bool HkNfcLlcp_SendRequest(void);
+bool HkNfcLlcp_StopRequest(void);
+void HkNfcLlcp_Close(void);
 
 #endif /* HK_NFCLLCP_H */

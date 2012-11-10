@@ -9,7 +9,8 @@
 #include "HkNfcNdef.h"
 #include "HkNfcSnep.h"
 
-#define SNEP_INITIATOR
+#define SNEP_INITIATOR		//なかったらターゲット
+//#define SNEP_PUT			//なかったらサーバ
 
 const char* STR_NFCA = 			"NFC-A";
 const char* STR_NFCB = 			"NFC-B";
@@ -92,7 +93,6 @@ int nfc_test()
 			hk_msleep(3000);
 			break;
 		} else {
-			HkNfcSnepStop();
 			hk_msleep(1000);
 		}
 		printf("-----------------------\n");
@@ -113,49 +113,60 @@ static bool _snep(const char* pStr)
 	bool b;
 
 //	b = HkNfcNdef_CreateText(&msg, pStr, _strlen(pStr), LANGCODE_EN);
-	b = HkNfcNdef_CreateUrl(&msg, HKNFCNDEF_URI_HTTP, "google.com");
+	b = HkNfcNdef_CreateUrl(&msg, HKNFCNDEF_URI_HTTP_WWW, "google.com");
 	if(!b) {
 		printf("ndef fail\n");
-		return false;
 	}
 
 	
-#if 1
+#ifdef SNEP_PUT
+//データ転送あり
 
+	if(b) {
 # ifdef SNEP_INITIATOR
-	/* Initiatorの場合、最後にPollingしたTechnologyでDEPする */
-	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_INITIATOR, &msg);
+		/* Initiatorの場合、最後にPollingしたTechnologyでDEPする */
+		b = HkNfcSnep_PutStart(HKNFCSNEP_MD_INITIATOR, &msg);
 # else
-	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_TARGET, &msg);
+		b = HkNfcSnep_PutStart(HKNFCSNEP_MD_TARGET, &msg);
 # endif
+	}
 
 #else
+//SNEPサーバ
 
-//データ転送なし
+	if(b) {
 # ifdef SNEP_INITIATOR
-	/* Initiatorの場合、最後にPollingしたTechnologyでDEPする */
-	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_INITIATOR, 0);
+		/* Initiatorの場合、最後にPollingしたTechnologyでDEPする */
+		b = HkNfcSnep_PutServer(HKNFCSNEP_MD_INITIATOR, &msg);
 # else
-	b = HkNfcSnep_PutStart(HKNFCSNEP_MD_TARGET, 0);
+		b = HkNfcSnep_PutServer(HKNFCSNEP_MD_TARGET, &msg);
 # endif
+	}
 
 #endif
-	if(!b) {
-		printf("put start fail : %02x\n", HkNfcRw_GetLastError());
-		return false;
+	
+	if(b) {
+		while(HkNfcSnep_Poll()) {
+			;
+		}
+	
+		if(HkNfcSnep_GetResult() == HKNFCSNEP_SUCCESS) {
+#ifdef SNEP_PUT
+			printf("put success\n");
+#else
+			printf("[svr]len = %d\n", msg.Length);
+			int loop;
+			for(loop=0; loop<msg.Length; loop++) {
+				printf("[g]%02x\n", msg.Data[loop]);
+			}
+#endif
+		} else {
+			printf("put result fail : %02x\n", HkNfcRw_GetLastError());
+			b = false;
+		}
+		HkNfcSnep_Stop();
 	}
 	
-	while(HkNfcSnep_Poll()) {
-		;
-	}
-	
-	if(HkNfcSnep_GetResult() != HKNFCSNEP_SUCCESS) {
-		printf("put result fail : %02x\n", HkNfcRw_GetLastError());
-		return false;
-	}
-
-	printf("success\n");
-	
-	return true;
+	return b;
 }
 
