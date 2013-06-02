@@ -1,0 +1,53 @@
+#!/bin/sh
+
+TARGET = tstm
+
+SRCDIR = .
+OBJDIR = ./obj
+INCDIR = ../inc
+
+LIBNAME = ../libhknfcrw_mac.a
+
+DEMO = nfc
+#DEMO = dep
+#DEMO = llcp
+#DEMO = snep
+#DEMO = reset
+
+SRCS = \
+	$(DEMO)test.c \
+	cyg_misc.c \
+	mac_devaccess_pasori.c \
+	main.c
+
+OBJS = $(addprefix $(OBJDIR)/, $(SRCS:.c=.o))
+SRCP = $/Users/hiroshi/Documents/src/libhknfcrw_c/Makefile_mac(addprefix $(SRCDIR)/, $(SRCS))
+vpath %.c $(SRCDIR)
+
+
+CFLAGS = -I$(INCDIR) -Wextra -O3
+LDOPT  = -L.. $(LIBNAME) -lusb-1.0
+
+# rules
+
+all: $(TARGET)
+
+$(TARGET): $(OBJS) $(LIBNAME)
+	$(CC) $(OBJS) -o $(TARGET) $(LDOPT)
+
+$(OBJDIR)/%.o : %.c
+	$(CC) -o $@ -c $(CFLAGS) $<
+
+clean:
+	$(RM) $(OBJDIR)/*.o $(TARGET) $(TARGET).exe
+
+
+.Depend:
+	-$(CXX) $(CINC) -MM $(SRCP) > .tmp
+	@if [ ! -d $(OBJDIR) ]; then \
+		echo ";; mkdir $(OBJDIR)"; mkdir $(OBJDIR); \
+	fi
+	sed -e '/^[^ ]/s,^,$(OBJDIR)/,' .tmp> .Depend
+	-rm .tmp
+
+include .Depend
