@@ -31,6 +31,7 @@
 #include "HkNfcLlcp.h"
 #include "HkNfcRw.h"
 #include "HkNfcRwIn.h"
+#include "hk_misc.h"
 #include "nfclog.h"
 
 
@@ -82,7 +83,7 @@ static void recvCb(const void* pBuf, uint8_t len);
 
 
 static const HkNfcNdefMsg*	m_pMessage = 0;
-static HkNfcSnepMode		m_Mode = HKNFCSNEP_MD_TARGET;
+//static HkNfcSnepMode		m_Mode = HKNFCSNEP_MD_TARGET;
 #ifdef HKNFCRW_USE_SNEP_SERVER
 static HkNfcNdefMsg* m_pSvrMsg = 0;
 #endif	/* HKNFCRW_USE_SNEP_SERVER */
@@ -441,6 +442,8 @@ static bool pollT(void)
 static void recvCb(const void* pBuf, uint8_t len)
 {
 	const uint8_t* pData = (const uint8_t*)pBuf;
+
+	(void)len;
 
 	switch(m_Status) {
 	case ST_PUT_RESPONSE:

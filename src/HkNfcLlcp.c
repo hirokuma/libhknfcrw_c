@@ -28,6 +28,7 @@
  * OF SUCH DAMAGE.
  */
 #include "HkNfcRw.h"
+#include "HkNfcRwIn.h"
 #include "HkNfcLlcp.h"
 #include "NfcPcd.h"
 #include "hk_misc.h"
@@ -512,14 +513,13 @@ bool HkNfcLlcp_PollAsTg(void)
 			m_SSAP = SAP_MNG;
 			HkNfcRw_SetLastError(HKNFCERR_LLCP_TIMEOUT);
 		} else {
-			uint8_t type;
-			uint8_t pdu = analyzePdu(pResponseBuf, len, &type);
+			//uint8_t type;
+			//uint8_t pdu = analyzePdu(pResponseBuf, len, &type);
 			//PDU送信側になる
 			m_SendRecv = SR_SENDER;
 		}
 	} else {
 		//PDU送信側
-		uint8_t len;
 		switch(m_LlcpStat) {
 		case LSTAT_NONE:
 			//
@@ -735,7 +735,6 @@ static bool depiStart(HkNfcLlcpMode mode)
 	uint8_t br;
 	const uint8_t* pRecv = NfcPcd_ResponseBuf();
 	bool bVERSION = false;
-	uint8_t pdu;
 	uint8_t pos = 0;
 
 	LOGD("%s\n", __PRETTY_FUNCTION__);
@@ -1097,7 +1096,6 @@ static bool deptStart(void)
 		bool bVERSION = false;
 		while(pos < IniCmdLen) {
 			//ここでPDU解析
-			uint8_t pdu;
 			if(pIniCmd[pos] == PL_VERSION) {
 				bVERSION = true;
 			}
@@ -1271,12 +1269,20 @@ static uint8_t analyzePdu(const uint8_t* pBuf, uint8_t len, uint8_t* pResPdu)
  *******************************************************************/
 static uint8_t analyzeSymm(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
+	(void)pBuf;
+	(void)len;
+	(void)dsap;
+	(void)ssap;
+
 	LOGD("PDU_SYMM\n");
 	return PDU_INFOPOS;
 }
 
 static uint8_t analyzePax(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
+	(void)dsap;
+	(void)ssap;
+
 	LOGD("PDU_PAX\n");
 
 	pBuf += PDU_INFOPOS;
@@ -1296,12 +1302,21 @@ static uint8_t analyzePax(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_
 
 static uint8_t analyzeAgf(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
+	(void)len;
+	(void)dsap;
+	(void)ssap;
+
 	LOGD("PDU_AGF\n");
 	return (uint8_t)(*(pBuf + PDU_INFOPOS) + 1);
 }
 
 static uint8_t analyzeUi(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
+	(void)pBuf;
+	(void)len;
+	(void)dsap;
+	(void)ssap;
+
 	LOGD("PDU_UI\n");
 	return SDU;		//終わりまでデータが続く
 }
@@ -1351,6 +1366,9 @@ static uint8_t analyzeConn(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8
 
 static uint8_t analyzeDisc(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
+	(void)pBuf;
+	(void)len;
+
 	LOGD("PDU_DISC\n");
 	if((dsap == 0) && (ssap == 0)) {
 		//5.4.1 Intentional Link Deactivation
@@ -1369,6 +1387,9 @@ static uint8_t analyzeDisc(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8
 
 static uint8_t analyzeCc(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
+	(void)dsap;
+	(void)ssap;
+
 	LOGD("PDU_CC\n");
 	if(m_LlcpStat == LSTAT_CONNECTING) {
 		//OK
@@ -1404,6 +1425,10 @@ static uint8_t analyzeCc(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t
 
 static uint8_t analyzeDm(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
+	(void)len;
+	(void)dsap;
+	(void)ssap;
+
 	LOGD("PDU_DM : %d\n", *(pBuf + PDU_INFOPOS));
 	if(m_LlcpStat == LSTAT_WAIT_DM) {
 		//切断シーケンスの終わり
@@ -1415,6 +1440,11 @@ static uint8_t analyzeDm(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t
 
 static uint8_t analyzeFrmr(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
+	(void)pBuf;
+	(void)len;
+	(void)dsap;
+	(void)ssap;
+
 	LOGD("PDU_FRMR\n");
 	return 0;
 }
@@ -1423,6 +1453,10 @@ static uint8_t analyzeInfo(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8
 {
 	uint8_t NowS = *(pBuf+PDU_INFOPOS) >> 4;
 	uint8_t NowR = *(pBuf+PDU_INFOPOS) & 0x0f;
+
+	(void)len;
+	(void)dsap;
+	(void)ssap;
 
 	LOGD("PDU_I(NS:%d / NR:%d))\n", NowS, NowR);
 	if(NowS == m_ValueR) {
@@ -1447,18 +1481,29 @@ static uint8_t analyzeInfo(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8
 
 static uint8_t analyzeRr(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
+	(void)len;
+	(void)dsap;
+	(void)ssap;
+
 	LOGD("PDU_RR : N(R)=%d\n", *(pBuf + PDU_INFOPOS));
 	return 0;
 }
 
 static uint8_t analyzeRnr(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
+	(void)len;
+	(void)dsap;
+	(void)ssap;
+
 	LOGD("PDU_RNR : N(R)=%d\n", *(pBuf + PDU_INFOPOS));
 	return 0;
 }
 
 static uint8_t analyzeDummy(const uint8_t* pBuf, uint8_t len, uint8_t dsap, uint8_t ssap)
 {
+	(void)dsap;
+	(void)ssap;
+
 	LOGD("dummy dummy dummy\n");
 	int i;
 	for(i=0; i<len; i++) {

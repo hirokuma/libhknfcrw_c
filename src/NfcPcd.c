@@ -80,8 +80,10 @@ static uint8_t	m_NfcIdLen;					///< 取得済みのNFCID長。0の場合は未�
 static uint8_t s_SendBuf[RWBUF_MAX];
 /// Normalフレームのデータ部
 static uint8_t* s_NormalFrmBuf = &(s_SendBuf[POS_NORMALFRM_DATA]);
+#if 0
 /// Extendedフレームのデータ部
 static uint8_t* s_ExtendFrmBuf = &(s_SendBuf[POS_EXTENDFRM_DATA]);
+#endif
 
 
 ///////////////////////////////////////////////////////////////////////////
@@ -1182,7 +1184,9 @@ static bool sendCmd(
 			uint8_t* pResponse, uint16_t* pResponseLen,
 			bool bRecv)
 {
+#ifdef ENABLE_FRAME_LOG
 	int i;
+#endif
 
 	//LOGD("CommandLen : %d", CommandLen);
 	*pResponseLen = 0;
@@ -1283,7 +1287,9 @@ static bool sendCmd(
  */
 static bool recvResp(uint8_t* pResponse, uint16_t* pResponseLen, uint8_t CmdCode)
 {
+#ifdef ENABLE_FRAME_LOG
 	int i;
+#endif
 	uint8_t res_buf[6];
 	uint16_t ret_len = hk_nfcrw_read(res_buf, 5);
 	if(ret_len != 5) {

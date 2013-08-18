@@ -41,7 +41,9 @@
 
 
 static uint16_t		m_SystemCode = kSC_BROADCAST;		///< システムコード
+#if 0
 static uint16_t		m_SvcCode = HKNFCF_SVCCODE_RW;		///< サービスコード
+#endif
 
 #ifdef QHKNFCRW_USE_FELICA
 static uint16_t		m_syscode[16];

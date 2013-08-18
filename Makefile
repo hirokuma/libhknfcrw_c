@@ -82,7 +82,7 @@ clean:
 	$(RM) $(OBJDIR)/*.o $(TARGET) .Depend
 
 .Depend:
-	-$(CXX) $(CINC) -MM $(SRCP) > .tmp
+	-$(CC) $(CINC) -MM $(SRCP) > .tmp
 	@if [ ! -d $(OBJDIR) ]; then \
 		echo ";; mkdir $(OBJDIR)"; mkdir $(OBJDIR); \
 	fi
