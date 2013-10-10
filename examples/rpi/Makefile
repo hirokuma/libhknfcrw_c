@@ -33,5 +33,5 @@ $(OBJDIR)/%.o : %.c
 	$(CC) -o $@ -c $(CFLAGS) $<
 
 clean:
-	$(RM) $(OBJDIR)/*.o $(TARGET) $(TARGET).exe
+	$(RM) $(OBJDIR)/*.o $(TARGET)
 

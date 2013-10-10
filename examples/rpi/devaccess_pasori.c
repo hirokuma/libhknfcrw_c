@@ -66,7 +66,7 @@ static bool usb_open()
 
 //	libusb_set_debug(NULL, 3);
 
-#if 0
+#if 1
 	libusb_device **devs;
 	ssize_t cnt = libusb_get_device_list(m_pContext, &devs);
 	if (cnt < 0) {
@@ -150,7 +150,7 @@ static bool usb_open()
 
 	r = libusb_claim_interface(m_pHandle, 0);
 	if(r != 0) {
-		LOGE("cannot claim\n");
+		LOGE("cannot claim : %d\n", r);
 		close();
 		return false;
 	}
