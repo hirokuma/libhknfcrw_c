@@ -2,6 +2,7 @@
 #include <string.h>
 #include <stdbool.h>
 #include <stdint.h>
+#include "HkNfcRw.h"
 
 int main(int argc, char *argv[])
 {

@@ -1,3 +1,4 @@
+#define _BSD_SOURCE
 #include <string.h>
 #include <unistd.h>
 #include <sys/time.h>
@@ -14,8 +15,13 @@ static uint16_t s_Timeout = 0;
  *
  * @param	msec	待ち時間[msec]
  */
-void hk_msleep(uint16_t msec) {
-	usleep(msec * 1000);
+void hk_msleep(uint16_t msec)
+{
+	struct timespec ts;
+	ts.tv_sec = 0;
+	ts.tv_nsec = (long)((long)msec * 1000000L);
+	nanosleep(&ts, NULL);
+	//usleep(msec * 1000);]
 }
 
 
