@@ -4,7 +4,7 @@ TARGET = getuid
 
 SRCDIR = .
 OBJDIR = ./obj
-INCDIR = ../inc
+INCDIR = ../../inc
 
 LIBNAME = ../../libhknfcrw.a
 
@@ -19,7 +19,7 @@ SRCP = $(addprefix $(SRCDIR)/, $(SRCS))
 vpath %.c $(SRCDIR)
 
 
-CFLAGS = -I$(INCDIR) -Wextra -O3
+CFLAGS = -I$(INCDIR) -std=c99 -Wextra -O3
 LDOPT  = -L.. $(LIBNAME) -lusb-1.0
 
 # rules

@@ -1,6 +1,6 @@
 #include <string.h>
 #include <sys/types.h>
-#include <libusbx-1.0/libusb.h>
+#include <libusb-1.0/libusb.h>
 
 #include "hk_devaccess.h"
 
