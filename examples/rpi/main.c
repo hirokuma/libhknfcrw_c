@@ -33,6 +33,8 @@ int main(int argc, char *argv[])
 		}
 		printf("\n");
 	}
+	
+	HkNfcRw_Close();
 
 	return 0;
 }

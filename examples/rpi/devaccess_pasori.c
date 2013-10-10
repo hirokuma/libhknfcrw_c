@@ -5,7 +5,7 @@
 #include "hk_devaccess.h"
 
 // デバッグ設定
-#define HKNFCRW_ENABLE_DEBUG
+//#define HKNFCRW_ENABLE_DEBUG
 
 #ifdef HKNFCRW_ENABLE_DEBUG
 //#define DBG_WRITEDATA

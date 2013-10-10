@@ -24,7 +24,7 @@ LDOPT  = -L.. $(LIBNAME) -lusb-1.0
 
 # rules
 
-all: $(TARGET)
+all: init $(TARGET)
 
 $(TARGET): $(OBJS) $(LIBNAME)
 	$(CC) $(OBJS) -o $(TARGET) $(LDOPT)
@@ -34,4 +34,7 @@ $(OBJDIR)/%.o : %.c
 
 clean:
 	$(RM) $(OBJDIR)/*.o $(TARGET)
+
+init:
+	-mkdir $(OBJDIR)
 

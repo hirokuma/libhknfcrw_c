@@ -38,7 +38,7 @@
 #define LOG_TAG "NfcPcd"
 #include "nfclog.h"
 //#define ENABLE_FRAME_LOG
-#define ENABLE_LOG_DETAIL
+//#define ENABLE_LOG_DETAIL
 
 /*
  * definition
