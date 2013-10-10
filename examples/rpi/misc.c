@@ -10,9 +10,9 @@ static struct timeval s_TimeVal;
 static uint16_t s_Timeout = 0;
 
 /**
- *  @brief	ƒ~ƒŠ•bƒXƒŠ[ƒv
+ *  @brief	ãƒŸãƒªç§’ã‚¹ãƒªãƒ¼ãƒ—
  *
- * @param	msec	‘Ò‚¿ŠÔ[msec]
+ * @param	msec	å¾…ã¡æ™‚é–“[msec]
  */
 void hk_msleep(uint16_t msec) {
 	usleep(msec * 1000);
@@ -20,9 +20,9 @@ void hk_msleep(uint16_t msec) {
 
 
 /**
- * ƒ^ƒCƒ}ŠJn
+ * ã‚¿ã‚¤ãƒé–‹å§‹
  *
- * @param[in]	tmval	ƒ^ƒCƒ€ƒAƒEƒgŠÔ[msec]
+ * @param[in]	tmval	ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆæ™‚é–“[msec]
  */
 void hk_start_timer(uint16_t tmval)
 {
@@ -33,9 +33,9 @@ void hk_start_timer(uint16_t tmval)
 
 
 /**
- *  ƒ^ƒCƒ€ƒAƒEƒgŠÄ‹
+ *  ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆç›£è¦–
  * 
- * @retval	true	ƒ^ƒCƒ€ƒAƒEƒg”­¶
+ * @retval	true	ã‚¿ã‚¤ãƒ ã‚¢ã‚¦ãƒˆç™ºç”Ÿ
  */
 bool hk_is_timeout()
 {
@@ -59,13 +59,13 @@ bool hk_is_timeout()
 
 
 /**
- * ƒƒ‚ƒŠ”äŠr
+ * ãƒ¡ãƒ¢ãƒªæ¯”è¼ƒ
  *
- * @param[in]	s1		”äŠrŒ³1
- * @param[in]	s2		”äŠrŒ³2
- * @param[in]	n		”äŠrƒTƒCƒY
- * @retval		0			ˆê’v
- * @retval		ã‹LˆÈŠO	•sˆê’v
+ * @param[in]	s1		æ¯”è¼ƒå…ƒ1
+ * @param[in]	s2		æ¯”è¼ƒå…ƒ2
+ * @param[in]	n		æ¯”è¼ƒã‚µã‚¤ã‚º
+ * @retval		0			ä¸€è‡´
+ * @retval		ä¸Šè¨˜ä»¥å¤–	ä¸ä¸€è‡´
  */
 int   hk_memcmp(const void *s1, const void *s2, uint16_t n)
 {
@@ -73,12 +73,12 @@ int   hk_memcmp(const void *s1, const void *s2, uint16_t n)
 }
 
 /**
- * ƒƒ‚ƒŠƒRƒs[
+ * ãƒ¡ãƒ¢ãƒªã‚³ãƒ”ãƒ¼
  *
- * @param[out]	dst		ƒRƒs[æ
- * @param[in]	src		ƒRƒs[Œ³
- * @param[in]	len		ƒRƒs[ƒTƒCƒY
- * @return				ƒRƒs[æƒAƒhƒŒƒX(dst)
+ * @param[out]	dst		ã‚³ãƒ”ãƒ¼å…ˆ
+ * @param[in]	src		ã‚³ãƒ”ãƒ¼å…ƒ
+ * @param[in]	len		ã‚³ãƒ”ãƒ¼ã‚µã‚¤ã‚º
+ * @return				ã‚³ãƒ”ãƒ¼å…ˆã‚¢ãƒ‰ãƒ¬ã‚¹(dst)
  */
 void* hk_memcpy(void* dst, const void* src, uint16_t len)
 {
@@ -86,12 +86,12 @@ void* hk_memcpy(void* dst, const void* src, uint16_t len)
 }
 
 /**
- * ƒƒ‚ƒŠ‘‚«‚İ
+ * ãƒ¡ãƒ¢ãƒªæ›¸ãè¾¼ã¿
  *
- * @param[out]	dst		‘‚«‚İæ
- * @param[in]	dat		‘‚«‚İƒf[ƒ^
- * @param[in]	len		‘‚«‚İƒTƒCƒY
- * @return				‘‚«‚İæƒAƒhƒŒƒX(dst)
+ * @param[out]	dst		æ›¸ãè¾¼ã¿å…ˆ
+ * @param[in]	dat		æ›¸ãè¾¼ã¿ãƒ‡ãƒ¼ã‚¿
+ * @param[in]	len		æ›¸ãè¾¼ã¿ã‚µã‚¤ã‚º
+ * @return				æ›¸ãè¾¼ã¿å…ˆã‚¢ãƒ‰ãƒ¬ã‚¹(dst)
  */
 void* hk_memset(void* dst, uint8_t dat, uint16_t len)
 {
