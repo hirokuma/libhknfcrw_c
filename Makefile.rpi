@@ -63,8 +63,6 @@ SRCP = $(addprefix $(SRCDIR)/, $(SRCS))
 vpath %.c $(SRCDIR)
 
 CINC = -I$(INCDIR)
-#CFLAGS = $(CINC) -Wextra -O3 -mcpu='cortex-m3' -mthumb -mthumb-interwork
-#CFLAGS = $(CINC) -Wextra -g -O0 -ffunction-sections -mcpu='cortex-m3' -mthumb -mthumb-interwork
 CFLAGS += $(CINC) -Wextra -g -O0
 LDOPT  = 
 

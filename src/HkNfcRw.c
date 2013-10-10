@@ -144,13 +144,15 @@ HkNfcType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF)
 			LOGD("PollingF\n");
 			m_Type = HKNFCTYPE_F;
 		}
-	} else if(bNfcA) {
+	}
+	if ((m_Type == HKNFCTYPE_NONE) && (bNfcA)) {
         bool ret = HkNfcA_Polling();
 		if(ret) {
 			LOGD("PollingA\n");
 			m_Type = HKNFCTYPE_A;
 		}
-	} else if(bNfcB) {
+	}
+	if ((m_Type == HKNFCTYPE_NONE) && (bNfcB)) {
         bool ret = HkNfcB_Polling();
 		if(ret) {
 			LOGD("PollingB\n");
