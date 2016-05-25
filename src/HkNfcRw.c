@@ -52,8 +52,8 @@ static uint8_t		m_LastError;	///< 最後に発生したエラー番号
  * @retval	false		失敗
  *
  * @attention	- 初回に必ず呼び出すこと。
- * 				- falseの場合、呼び出し側が#close()すること。
- * 				- 終了時には#close()を呼び出すこと。
+ * 				- falseの場合、呼び出し側が#HkNfcRw_Close()すること。
+ * 				- 終了時には#HkNfcRw_Close()を呼び出すこと。
  *
  * @note		- 呼び出しただけでは搬送波を出力しない。
  */

@@ -8,10 +8,10 @@ INCDIR = ../inc
 
 LIBNAME = ../libhknfcrw_cyg.a
 
-#DEMO = nfc
+DEMO = nfc
 #DEMO = dep
 #DEMO = llcp
-DEMO = snep
+#DEMO = snep
 #DEMO = reset
 
 SRCS = \
@@ -27,6 +27,8 @@ vpath %.c $(SRCDIR)
 
 CFLAGS = -I$(INCDIR) -Wextra -O3
 LDOPT  = -L.. $(LIBNAME) -lusb-1.0
+
+CFLAGS += -DHKNFCRW_USE_SNEP_SERVER -DHKNFCRW_USE_LASTERR
 
 # rules
 

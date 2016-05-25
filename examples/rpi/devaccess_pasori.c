@@ -71,7 +71,7 @@ static bool usb_open()
 	ssize_t cnt = libusb_get_device_list(m_pContext, &devs);
 	if (cnt < 0) {
 		LOGE("cannot list\n");
-		close();
+		usb_close();
 		return false;
 	}
 
@@ -93,13 +93,13 @@ static bool usb_open()
 	}
 	if(i != 0) {
 		LOGE("cannot find\n");
-		close();
+		usb_close();
 		return false;
 	}
 	r = libusb_open(dev, &m_pHandle);
 	if(r != 0) {
 		LOGE("cannot open : %d\n", r);
-		close();
+		usb_close();
 		return false;
 	}
 	libusb_free_device_list(devs, 1);
@@ -109,7 +109,7 @@ static bool usb_open()
 	m_pHandle = libusb_open_device_with_vid_pid(NULL, VID, PID);
 	if(m_pHandle == NULL) {
 		LOGE("cannot open\n");
-		close();
+		usb_close();
 		return false;
 	}
 	//printf("  ==>done!\n");
@@ -122,7 +122,7 @@ static bool usb_open()
 	r = libusb_get_config_descriptor(dev, 0, &pConfig);
 	if(r != 0) {
 		LOGE("cannot getdesc : %d\n", r);
-		close();
+		usb_close();
 		return false;
 	}
 	
@@ -151,7 +151,7 @@ static bool usb_open()
 	r = libusb_claim_interface(m_pHandle, 0);
 	if(r != 0) {
 		LOGE("cannot claim : %d\n", r);
-		close();
+		usb_close();
 		return false;
 	}
 

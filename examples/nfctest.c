@@ -27,6 +27,7 @@ int nfc_test()
 
 	if(type == HKNFCTYPE_A) {
 		//NFC-A
+        printf("[[NFC-A]]\n");
 
 		//Ultralight‘O’ñ
 		printf("read\n");
@@ -72,6 +73,7 @@ int nfc_test()
 		
 	} else if(type == HKNFCTYPE_F) {
 		//NFC-F
+        printf("[[NFC-F]]\n");
 
 		printf("read\n");
 		b = HkNfcF_Polling(0x12fc);

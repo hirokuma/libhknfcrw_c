@@ -8,6 +8,7 @@
 #include "HkNfcF.h"
 #include "HkNfcNdef.h"
 #include "HkNfcSnep.h"
+#include "hk_misc.h"
 
 #define SNEP_INITIATOR		//なかったらターゲット
 //#define SNEP_PUT			//なかったらサーバ
