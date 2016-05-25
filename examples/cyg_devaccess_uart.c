@@ -30,7 +30,8 @@
 #endif	//HKNFCRW_ENABLE_DEBUG
 
 
-static const char* NFCPCD_DEV = "/dev/ttyS15";		//COM16
+//uart.sh も変更すること
+static const char* NFCPCD_DEV = "/dev/com14";
 //	static const char* NFCPCD_DEV = "/dev/ttyUSB0";
 
 static int s_fd = -1;		///< シリアルポートのファイルディスクリプタ
@@ -191,4 +192,16 @@ uint16_t  hk_nfcrw_read(uint8_t* data, uint16_t len)
 #endif	//__CYGWIN__
 
 	return ret_len;
+}
+
+/**
+ * ポート受信タイムアウト時間設定
+ * 
+ * タイムアウト処理が可能な場合、受信タイムアウト時間を設定する。
+ * タイムアウトがない場合は、何も処理しないし、#hk_nfcrw_read()にも影響はない。
+ *
+ * @param[in]	msec		タイムアウト時間(ミリ秒)。0のときはタイムアウト解除。
+ */
+void hk_nfcrw_read_timeout(uint16_t msec)
+{
 }

@@ -1,4 +1,5 @@
 #!/bin/sh
 
-stty -F /dev/ttyS15 speed 115200
+#cyg_devaccess_uart.c の NFCPCD_DEVも変更すること
+stty -F /dev/com14 speed 115200
 

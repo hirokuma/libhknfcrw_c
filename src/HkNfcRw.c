@@ -157,7 +157,9 @@ HkNfcType HkNfcRw_Detect(bool bNfcA, bool bNfcB, bool bNfcF)
 			m_Type = HKNFCTYPE_B;
 		}
 	}
-//	LOGD("Detect fail\n");
+    else {
+    	LOGD("Detect fail\n");
+    }
 
 	return m_Type;
 }

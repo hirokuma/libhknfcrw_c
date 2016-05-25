@@ -500,6 +500,27 @@ bool NfcPcd_WriteRegister(const uint8_t* pCommand, uint8_t CommandLen)
 	return true;
 }
 
+
+bool NfcPcd_PowerDown(uint8_t wake)
+{
+	//LOGD("%s", __PRETTY_FUNCTION__);
+
+	s_NormalFrmBuf[0] = 0xd4;
+	s_NormalFrmBuf[1] = 0x16;
+	s_NormalFrmBuf[2] = wake;
+
+	uint16_t res_len;
+	bool ret = sendCmd(s_NormalFrmBuf, 3, s_ResponseBuf, &res_len, true);
+	if(!ret || (res_len != RESHEAD_LEN)) {
+		LOGE("powerDown ret=%d\n", ret);
+		HkNfcRw_SetLastError(HKNFCERR_PCD_POWERDOWN);
+		return false;
+	}
+
+	return true;
+}
+
+
 /**
  * GetFirmwareVersion
  *

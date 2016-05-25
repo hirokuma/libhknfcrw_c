@@ -137,6 +137,8 @@ bool NfcPcd_Diagnose(
 bool NfcPcd_SetParameters(uint8_t val);
 /// WriteRegister
 bool NfcPcd_WriteRegister(const uint8_t* pCommand, uint8_t CommandLen);
+/// PowerDown
+bool NfcPcd_PowerDown(uint8_t wake);
 /// GetFirmware
 bool NfcPcd_GetFirmwareVersion(uint8_t* pResponse);
 /// GetGeneralStatus

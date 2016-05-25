@@ -30,7 +30,10 @@ LDOPT  = -L.. $(LIBNAME)
 
 # rules
 
-all: $(TARGET)
+all: mkd $(TARGET)
+
+mkd:
+	-mkdir -p $(OBJDIR)
 
 $(TARGET): $(OBJS) $(LIBNAME)
 	$(CC) $(OBJS) -o $(TARGET) $(LDOPT)
