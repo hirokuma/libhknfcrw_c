@@ -44,7 +44,7 @@ typedef uint8_t HkNfcType;
 #define HKNFCTYPE_A		((HkNfcType)1)		///< NFC-A
 #define HKNFCTYPE_B		((HkNfcType)2)		///< NFC-B
 #define HKNFCTYPE_F		((HkNfcType)3)		///< NFC-F
-
+#define HKNFCID_MAX		(10)
 
 /// オープン
 bool HkNfcRw_Open(void);
