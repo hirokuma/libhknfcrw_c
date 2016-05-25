@@ -58,6 +58,7 @@ bool hk_is_timeout()
 }
 
 
+#ifndef HK_USE_STRING_H
 /**
  * ƒƒ‚ƒŠ”äŠr
  *
@@ -102,3 +103,4 @@ uint8_t hk_strlen(const char* pStr)
 {
 	return strlen(pStr);
 }
+#endif  //HK_USE_STRING_H

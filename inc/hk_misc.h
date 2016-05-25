@@ -34,6 +34,12 @@
 #include <stdint.h>
 #include <stdbool.h>
 
+#ifdef HK_USE_STRING_H
+#include <stdlib.h>
+#include <string.h>
+#endif  //HK_USE_STRING_H
+
+
 #define h16(u16)		((uint8_t)(u16 >> 8))
 #define l16(u16)		((uint8_t)u16)
 #define ul16(h8,l8)		((uint16_t)((h8<<8) | l8))
@@ -59,6 +65,9 @@ void hk_start_timer(uint16_t tmval);
  */
 bool hk_is_timeout(void);
 
+#ifdef HK_USE_STRING_H
+#define hk_memcmp   memcmp
+#else   //HK_USE_STRING_H
 /**
  * メモリ比較
  *
@@ -69,7 +78,11 @@ bool hk_is_timeout(void);
  * @retval		上記以外	不一致
  */
 int   hk_memcmp(const void *s1, const void *s2, uint16_t n);
+#endif  //HK_USE_STRING_H
 
+#ifdef HK_USE_STRING_H
+#define hk_memcpy memcpy
+#else   //HK_USE_STRING_H
 /**
  * メモリコピー
  *
@@ -79,7 +92,11 @@ int   hk_memcmp(const void *s1, const void *s2, uint16_t n);
  * @return				コピー先アドレス(dst)
  */
 void* hk_memcpy(void* dst, const void* src, uint16_t len);
+#endif  //HK_USE_STRING_H
 
+#ifdef HK_USE_STRING_H
+#define hk_memset memset
+#else   //HK_USE_STRING_H
 /**
  * メモリ書き込み
  *
@@ -89,10 +106,15 @@ void* hk_memcpy(void* dst, const void* src, uint16_t len);
  * @return				書き込み先アドレス(dst)
  */
 void* hk_memset(void* dst, uint8_t dat, uint16_t len);
+#endif  //HK_USE_STRING_H
 
+#ifdef HK_USE_STRING_H
+#define hk_strlen strlen
+#else   //HK_USE_STRING_H
 /**
  * char文字数
  */
 uint8_t hk_strlen(const char* pStr);
+#endif  //HK_USE_STRING_H
 
 #endif // HK_MISC_H
